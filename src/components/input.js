@@ -11,7 +11,7 @@
     funcUtils = require('../utils');
   } else {
     React = window.React;
-    funcUtils = window.crizmasFuncUtils;
+    funcUtils = window.crizmas.funcUtils;
   }
 
   const {Component, PropTypes} = React;
@@ -213,6 +213,6 @@
   if (isModule) {
     module.exports = moduleExports;
   } else {
-    window.CrizmasInput = moduleExports;
+    window.crizmas.Input = moduleExports;
   }
 })();

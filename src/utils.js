@@ -37,6 +37,7 @@
   if (isModule) {
     module.exports = moduleExports;
   } else {
-    window.crizmasFuncUtils = moduleExports;
+    window.crizmas = window.crizmas || {};
+    window.crizmas.funcUtils = moduleExports;
   }
 })();
