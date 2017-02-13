@@ -80,24 +80,33 @@
     constructor(...args) {
       super(...args);
 
+      // isMounted will be deprecated in React
+      // https://facebook.github.io/react/blog/2015/12/16/ismounted-antipattern.html
+      this.mounted = false;
+
       this.state = {
         value: this.props.value,
         oldValue: this.props.value
       };
 
-      const inputDebounce = typeof this.props.debounce === 'number'
-        ? this.props.debounce
-        : typeof this.context.inputDebounce === 'number'
-          ? this.context.inputDebounce
-          : defaultDebounce;
-
       this.initOnChange = this.initOnChange.bind(this);
-      this.onChange = inputDebounce === 0
-        ? this.onChange
-        : debounce(this.onChange, inputDebounce);
+
+      this.setOnChangeMethod();
+    }
+
+    componentWillMount() {
+      this.mounted = true;
+    }
+
+    componentWillUnmount() {
+      this.mounted = false;
     }
 
     componentWillReceiveProps(newProps) {
+      if (newProps.debounce !== this.props.debounce) {
+        this.setOnChangeMethod();
+      }
+
       if (newProps.value !== this.props.value) {
         this.setState({
           value: newProps.value,
@@ -143,8 +152,24 @@
         ? normalizer(value, this.props.initialValue)
         : value;
 
-      this.setState({oldValue: newValue});
+      // since onChange could be debounced we should check if the component is still mounted
+      if (this.mounted) {
+        this.setState({oldValue: newValue});
+      }
+
       onChange(newValue);
+    }
+
+    setOnChangeMethod() {
+      const inputDebounce = typeof this.props.debounce === 'number'
+        ? this.props.debounce
+        : typeof this.context.inputDebounce === 'number'
+          ? this.context.inputDebounce
+          : defaultDebounce;
+
+      this.onChange = inputDebounce === 0
+        ? Input.prototype.onChange
+        : debounce(Input.prototype.onChange, inputDebounce);
     }
 
     render() {
@@ -155,14 +180,9 @@
         ? ''
         : value;
 
-      return React.DOM.span(
-        {className},
-        !!required && React.DOM.span(
-          null,
-          '*'
-        ),
-        React.DOM.input(
-          {
+      return React.DOM.span({className},
+        !!required && React.DOM.span(null, '*'),
+        React.DOM.input({
             value,
             type: allowedHtmlInputTypes.includes(type)
               ? type
@@ -175,10 +195,7 @@
         ),
         !!errors && !!errors.length && React.DOM.span(
           null,
-          errors.map((error, i) => React.DOM.span(
-            {key: i},
-            error
-          ))
+          errors.map((error, i) => React.DOM.span({key: i}, error))
         )
       );
     }
