@@ -1,3 +1,9 @@
+<a name="0.2.1"></a>
+# [0.2.1](https://github.com/raulsebastianmihaila/crizmas-components/compare/v0.2.0...v0.2.1) (2017-02-13)
+
+### Fixes
+- Check if the component is still mounted when setting the state in debounced onChange.
+
 <a name="0.2.0"></a>
 # [0.2.0](https://github.com/raulsebastianmihaila/crizmas-components/compare/v0.1.0...v0.2.0) (2016-12-29)
 
