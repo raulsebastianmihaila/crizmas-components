@@ -18,13 +18,16 @@
   const {debounce} = funcUtils;
 
   const defaultDebounce = 100;
-  // other than text type
-  const allowedHtmlInputTypes = ['radio', 'checkbox'];
   const numberRegExp = /^(-|\+)?(((\d+(\.\d*)?)|(\.\d+))(e(-|\+)?\d+)?)$/i;
   const partialNumberRegExp =
     /^(-|\+)?((\d*(\.\d*)?)|((((\d+(\.\d*)?)|(\.\d+))(e(-|\+)?\d*)?)?))$/i;
   const integerRegExp = /^(-|\+)?\d+$/i;
   const partialIntegerRegExp = /^(-|\+)?\d*$/i;
+
+  // other than text type
+  const isAllowedHtmlInputType = (type) => type === 'radio' || type === 'checkbox';
+
+  const isBoolHtmlInputType = (type) => type === 'radio' || type === 'checkbox';
 
   const valuesNormalizer = {
     number: (value, initialValue) => {
@@ -45,12 +48,18 @@
   };
 
   const valueTypesGuards = {
+    finiteNumber: (value) => {
+      const number = Number(value);
+
+      return Number.isNaN(number) || Number.isFinite(number);
+    },
+
     number: (value) => {
-      return partialNumberRegExp.test(value);
+      return partialNumberRegExp.test(value) && valueTypesGuards.finiteNumber(value);
     },
 
     integer: (value) => {
-      return partialIntegerRegExp.test(value);
+      return partialIntegerRegExp.test(value) && valueTypesGuards.finiteNumber(value);
     }
   };
 
@@ -117,8 +126,11 @@
 
     initOnChange(e) {
       const {type, isInputPending, onStartPending, onChange} = this.props;
-      const value = e.target.value;
+      const value = isBoolHtmlInputType(type)
+        ? e.target.checked
+        : e.target.value;
       const valueTypeGuard = valueTypesGuards[type];
+      const valueChangeGuard = valueChangeGuards[type];
 
       if (valueTypeGuard && !valueTypeGuard(value)) {
         return;
@@ -128,7 +140,7 @@
         value
       });
 
-      if (!onChange) {
+      if (!onChange || (valueChangeGuard && !valueChangeGuard(value, this.state.oldValue))) {
         return;
       }
 
@@ -141,11 +153,6 @@
 
     onChange(value) {
       const {type, onChange} = this.props;
-      const valueChangeGuard = valueChangeGuards[type];
-
-      if (valueChangeGuard && !valueChangeGuard(value, this.state.oldValue)) {
-        return;
-      }
 
       const normalizer = valuesNormalizer[type];
       const newValue = normalizer
@@ -173,7 +180,8 @@
     }
 
     render() {
-      const {errors, type, isPending, required, placeholder, className, onBlur} = this.props;
+      const {errors, type, required, placeholder, className, onBlur, readOnly,
+        disabled, autoFocus} = this.props;
       let value = this.state.value;
 
       value = value === null || value === undefined
@@ -184,17 +192,19 @@
         !!required && React.DOM.span(null, '*'),
         React.DOM.input({
             value,
-            type: allowedHtmlInputTypes.includes(type)
+            checked: isBoolHtmlInputType(type) && value,
+            type: isAllowedHtmlInputType(type)
               ? type
               : 'text',
-            placeholder: placeholder,
-            readOnly: isPending,
+            placeholder,
             onChange: this.initOnChange,
-            onBlur
+            onBlur,
+            readOnly,
+            disabled,
+            autoFocus
           }
         ),
-        !!errors && !!errors.length && React.DOM.span(
-          null,
+        !!errors && !!errors.length && React.DOM.span(null,
           errors.map((error, i) => React.DOM.span({key: i}, error))
         )
       );
@@ -206,7 +216,6 @@
     initialValue: PropTypes.any,
     type: PropTypes.oneOf(['string', 'text', 'number', 'integer', 'checkbox', 'radio']),
     errors: PropTypes.array,
-    isPending: PropTypes.bool,
     isInputPending: PropTypes.bool,
     required: PropTypes.bool,
     placeholder: PropTypes.string,
@@ -214,7 +223,10 @@
     debounce: PropTypes.number,
     onChange: PropTypes.func,
     onBlur: PropTypes.func,
-    onStartPending: PropTypes.func
+    onStartPending: PropTypes.func,
+    readOnly: PropTypes.bool,
+    disabled: PropTypes.bool,
+    autoFocus: PropTypes.bool
   };
 
   Input.defaultProps = {
