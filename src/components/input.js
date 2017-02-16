@@ -18,6 +18,7 @@
   const {debounce} = funcUtils;
 
   const defaultDebounce = 100;
+  const defaultBoolDebounce = 0;
   const numberRegExp = /^(-|\+)?(((\d+(\.\d*)?)|(\.\d+))(e(-|\+)?\d+)?)$/i;
   const partialNumberRegExp =
     /^(-|\+)?((\d*(\.\d*)?)|((((\d+(\.\d*)?)|(\.\d+))(e(-|\+)?\d*)?)?))$/i;
@@ -116,7 +117,9 @@
         this.setOnChangeMethod();
       }
 
-      if (newProps.value !== this.props.value) {
+      // we must ignore the same value when we have an intermediary string representation
+      // like 3.20 (after the 0 there can be a new decimal)
+      if (!newProps.isInputPending && newProps.value !== this.props.value) {
         this.setState({
           value: newProps.value,
           oldValue: newProps.value
@@ -170,9 +173,11 @@
     setOnChangeMethod() {
       const inputDebounce = typeof this.props.debounce === 'number'
         ? this.props.debounce
-        : typeof this.context.inputDebounce === 'number'
-          ? this.context.inputDebounce
-          : defaultDebounce;
+        : isBoolHtmlInputType(this.props.type)
+          ? defaultBoolDebounce
+          : typeof this.context.inputDebounce === 'number'
+            ? this.context.inputDebounce
+            : defaultDebounce;
 
       this.onChange = inputDebounce === 0
         ? Input.prototype.onChange
