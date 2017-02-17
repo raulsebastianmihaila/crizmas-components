@@ -1,3 +1,12 @@
+<a name="0.2.3"></a>
+# [0.2.3](https://github.com/raulsebastianmihaila/crizmas-components/compare/v0.2.2...v0.2.3) (2017-02-17)
+
+### Fixes
+- Make sure the input value cannot be changed from outside while the input is input pending.
+
+### Updates
+- Bool type now has a 0 default debounce.
+
 <a name="0.2.2"></a>
 # [0.2.2](https://github.com/raulsebastianmihaila/crizmas-components/compare/v0.2.1...v0.2.2) (2017-02-15)
 
