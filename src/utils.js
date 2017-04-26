@@ -3,31 +3,37 @@
 
   const isModule = typeof module === 'object' && typeof module.exports === 'object';
 
-  function debounce(func, delay) {
+  const debounce = (func, delay) => {
     let timeout;
 
-    return function (...args) {
-      clearTimeout(timeout);
+    // make sure the function is not a constructor
+    return ({
+      function(...args) {
+        clearTimeout(timeout);
 
-      timeout = setTimeout(() => {
-        func.apply(this, args);
-      }, delay);
-    };
-  }
-
-  function throttle(func, delay) {
-    let timeout;
-
-    return function (...args) {
-      if (!timeout) {
         timeout = setTimeout(() => {
-          timeout = null;
-
           func.apply(this, args);
         }, delay);
       }
-    };
-  }
+    }).function;
+  };
+
+  const throttle = (func, delay) => {
+    let timeout;
+
+    // make sure the function is not a constructor
+    return ({
+      function(...args) {
+        if (!timeout) {
+          timeout = setTimeout(() => {
+            timeout = null;
+
+            func.apply(this, args);
+          }, delay);
+        }
+      }
+    }).function;
+  };
 
   const moduleExports = {
     debounce,

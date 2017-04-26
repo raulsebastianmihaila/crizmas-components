@@ -30,6 +30,7 @@
 
   const isBoolHtmlInputType = (type) => type === 'radio' || type === 'checkbox';
 
+  // normalizers convert the final string to the expected value
   const valuesNormalizer = {
     number: (value, initialValue) => {
       if (value === '') {
@@ -48,6 +49,7 @@
     text: (value) => valuesNormalizer.string(value)
   };
 
+  // type guards disallow unexpected characters in the input
   const valueTypesGuards = {
     finiteNumber: (value) => {
       const number = Number(value);
@@ -64,6 +66,10 @@
     }
   };
 
+  // change guards prevent calling the onChange handler with temporary values.
+  // an example is 3e for real numbers. the e character must be allowed because
+  // the user could enter 3e2, but the intermediary value 3e must not be sent
+  // to the client.
   const valueChangeGuards = {
     number: (value) => {
       return value === '' || numberRegExp.test(value);
@@ -90,10 +96,6 @@
     constructor(...args) {
       super(...args);
 
-      // isMounted will be deprecated in React
-      // https://facebook.github.io/react/blog/2015/12/16/ismounted-antipattern.html
-      this.mounted = false;
-
       this.state = {
         value: this.props.value,
         oldValue: this.props.value
@@ -102,14 +104,6 @@
       this.initOnChange = this.initOnChange.bind(this);
 
       this.setOnChangeMethod();
-    }
-
-    componentWillMount() {
-      this.mounted = true;
-    }
-
-    componentWillUnmount() {
-      this.mounted = false;
     }
 
     componentWillReceiveProps(newProps) {
@@ -133,7 +127,6 @@
         ? e.target.checked
         : e.target.value;
       const valueTypeGuard = valueTypesGuards[type];
-      const valueChangeGuard = valueChangeGuards[type];
 
       if (valueTypeGuard && !valueTypeGuard(value)) {
         return;
@@ -143,7 +136,22 @@
         value
       });
 
-      if (!onChange || (valueChangeGuard && !valueChangeGuard(value, this.state.oldValue))) {
+      const valueChangeGuard = valueChangeGuards[type];
+
+      if (valueChangeGuard && !valueChangeGuard(value, this.state.oldValue)) {
+        return;
+      }
+
+      const normalizer = valuesNormalizer[type];
+      const normalizedValue = normalizer
+        ? normalizer(value, this.props.initialValue)
+        : value;
+
+      this.setState({
+        oldValue: normalizedValue
+      });
+
+      if (!onChange) {
         return;
       }
 
@@ -151,23 +159,7 @@
         onStartPending();
       }
 
-      this.onChange(value);
-    }
-
-    onChange(value) {
-      const {type, onChange} = this.props;
-
-      const normalizer = valuesNormalizer[type];
-      const newValue = normalizer
-        ? normalizer(value, this.props.initialValue)
-        : value;
-
-      // since onChange could be debounced we should check if the component is still mounted
-      if (this.mounted) {
-        this.setState({oldValue: newValue});
-      }
-
-      onChange(newValue);
+      this.onChange(normalizedValue);
     }
 
     setOnChangeMethod() {
@@ -180,8 +172,8 @@
             : defaultDebounce;
 
       this.onChange = inputDebounce === 0
-        ? Input.prototype.onChange
-        : debounce(Input.prototype.onChange, inputDebounce);
+        ? this.props.onChange
+        : debounce(this.props.onChange, inputDebounce);
     }
 
     render() {

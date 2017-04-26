@@ -1,3 +1,12 @@
+<a name="0.2.4"></a>
+# [0.2.4](https://github.com/raulsebastianmihaila/crizmas-components/compare/v0.2.3...v0.2.4) (2017-04-29)
+
+### Fixes
+- Set `oldValue` before calling `onChange`.
+
+### Updates
+- Ensure that functions that should not be constructed are not constructors.
+
 <a name="0.2.3"></a>
 # [0.2.3](https://github.com/raulsebastianmihaila/crizmas-components/compare/v0.2.2...v0.2.3) (2017-02-17)
 
