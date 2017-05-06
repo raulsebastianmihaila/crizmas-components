@@ -4,17 +4,21 @@
   const isModule = typeof module === 'object' && typeof module.exports === 'object';
 
   let React;
+  let utils;
   let funcUtils;
 
   if (isModule) {
     React = require('react');
+    utils = require('crizmas-utils');
     funcUtils = require('../utils');
   } else {
     React = window.React;
+    utils = window.crizmas.utils;
     funcUtils = window.crizmas.funcUtils;
   }
 
   const {Component, PropTypes} = React;
+  const {isVal} = utils;
   const {debounce} = funcUtils;
 
   const defaultDebounce = 100;
@@ -179,11 +183,11 @@
     render() {
       const {errors, type, required, placeholder, className, onBlur, readOnly,
         disabled, autoFocus} = this.props;
-      let value = this.state.value;
+      let {value} = this.state;
 
-      value = value === null || value === undefined
-        ? ''
-        : value;
+      value = isVal(value)
+        ? value
+        : '';
 
       return React.DOM.span({className},
         !!required && React.DOM.span(null, '*'),

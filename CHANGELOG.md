@@ -1,3 +1,10 @@
+<a name="0.2.5"></a>
+# [0.2.5](https://github.com/raulsebastianmihaila/crizmas-components/compare/v0.2.4...v0.2.5) (2017-05-07)
+
+### Updates
+- Add `crizmas-utils` as a dependency.
+- Small refactoring.
+
 <a name="0.2.4"></a>
 # [0.2.4](https://github.com/raulsebastianmihaila/crizmas-components/compare/v0.2.3...v0.2.4) (2017-04-29)
 
