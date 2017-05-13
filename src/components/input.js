@@ -4,30 +4,32 @@
   const isModule = typeof module === 'object' && typeof module.exports === 'object';
 
   let React;
+  let PropTypes;
   let utils;
-  let funcUtils;
+  let componentUtils;
 
   if (isModule) {
     React = require('react');
+    PropTypes = require('prop-types');
     utils = require('crizmas-utils');
-    funcUtils = require('../utils');
+    componentUtils = require('../utils');
   } else {
     React = window.React;
-    utils = window.crizmas.utils;
-    funcUtils = window.crizmas.funcUtils;
+    PropTypes = window.PropTypes;
+    ({utils, componentUtils} = window.crizmas);
   }
 
-  const {Component, PropTypes} = React;
+  const {Component} = React;
   const {isVal} = utils;
-  const {debounce} = funcUtils;
+  const {debounce} = componentUtils;
 
   const defaultDebounce = 100;
   const defaultBoolDebounce = 0;
   const numberRegExp = /^(-|\+)?(((\d+(\.\d*)?)|(\.\d+))(e(-|\+)?\d+)?)$/i;
   const partialNumberRegExp =
     /^(-|\+)?((\d*(\.\d*)?)|((((\d+(\.\d*)?)|(\.\d+))(e(-|\+)?\d*)?)?))$/i;
-  const integerRegExp = /^(-|\+)?\d+$/i;
-  const partialIntegerRegExp = /^(-|\+)?\d*$/i;
+  const integerRegExp = /^(-|\+)?\d+$/;
+  const partialIntegerRegExp = /^(-|\+)?\d*$/;
 
   // other than text type
   const isAllowedHtmlInputType = (type) => type === 'radio' || type === 'checkbox';
@@ -55,18 +57,12 @@
 
   // type guards disallow unexpected characters in the input
   const valueTypesGuards = {
-    finiteNumber: (value) => {
-      const number = Number(value);
-
-      return Number.isNaN(number) || Number.isFinite(number);
-    },
-
     number: (value) => {
-      return partialNumberRegExp.test(value) && valueTypesGuards.finiteNumber(value);
+      return partialNumberRegExp.test(value);
     },
 
     integer: (value) => {
-      return partialIntegerRegExp.test(value) && valueTypesGuards.finiteNumber(value);
+      return partialIntegerRegExp.test(value);
     }
   };
 

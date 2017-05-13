@@ -1,8 +1,21 @@
+<a name="0.3.0"></a>
+# [0.3.0](https://github.com/raulsebastianmihaila/crizmas-components/compare/v0.2.5...v0.3.0) (2017-05-14)
+
+### Breaking changes
+- Removed the throttle function.
+- Changed the export namespace of utils to `componentUtils`.
+
+### Updates
+- Allow Infinity from the input as the string is not displayed anymore.
+- Small refactoring.
+- Add prop-types as a peer dependency.
+- Update version of react peer dependency.
+
 <a name="0.2.5"></a>
 # [0.2.5](https://github.com/raulsebastianmihaila/crizmas-components/compare/v0.2.4...v0.2.5) (2017-05-07)
 
 ### Updates
-- Add `crizmas-utils` as a dependency.
+- Add `crizmas-utils` as a peer dependency.
 - Small refactoring.
 
 <a name="0.2.4"></a>
