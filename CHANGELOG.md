@@ -1,3 +1,14 @@
+<a name="0.3.1"></a>
+# [0.3.1](https://github.com/raulsebastianmihaila/crizmas-components/compare/v0.3.0...v0.3.1) (2017-05-28)
+
+### Updates
+- Allow more HTML input types and textarea.
+- Added `crizmas-input` and `has-errors` css classes.
+- Added `inputClassName` and `inputProps` props.
+
+### Fixes
+- Fix checking the new value prop in `componentWillReceiveProps` so that the input value is not changed.
+
 <a name="0.3.0"></a>
 # [0.3.0](https://github.com/raulsebastianmihaila/crizmas-components/compare/v0.2.5...v0.3.0) (2017-05-14)
 
