@@ -220,7 +220,7 @@
   Input.propTypes = {
     value: PropTypes.any,
     initialValue: PropTypes.any,
-    type: PropTypes.oneOf([...allowedHtmlInputTypes, 'string', 'number','integer', 'textarea']),
+    type: PropTypes.oneOf([...allowedHtmlInputTypes, 'string', 'number', 'integer', 'textarea']),
     errors: PropTypes.array,
     isInputPending: PropTypes.bool,
     required: PropTypes.bool,
