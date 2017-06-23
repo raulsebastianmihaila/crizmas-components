@@ -19,7 +19,7 @@
     ({utils, componentUtils} = window.crizmas);
   }
 
-  const {Component} = React;
+  const {Component, createElement} = React;
   const {isVal} = utils;
   const {debounce} = componentUtils;
 
@@ -188,11 +188,11 @@
         : '';
       const hasErrors = !!errors && !!errors.length;
 
-      return React.DOM.span({
+      return createElement('span', {
           className: `crizmas-input ${hasErrors ? 'has-errors' : ''} ${className}`
         },
-        !!required && React.DOM.span(null, '*'),
-        React.DOM[type === 'textarea' ? type : 'input'](Object.assign(
+        !!required && createElement('span', null, '*'),
+        createElement(type === 'textarea' ? type : 'input', Object.assign(
           {},
           inputProps,
           {
@@ -210,8 +210,8 @@
             className: inputClassName,
           }
         )),
-        hasErrors && React.DOM.span(null,
-          errors.map((error, i) => React.DOM.span({key: i}, error))
+        hasErrors && createElement('span', null,
+          errors.map((error, i) => createElement('span', {key: i}, error))
         )
       );
     }
