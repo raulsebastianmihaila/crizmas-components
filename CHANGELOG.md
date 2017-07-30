@@ -1,3 +1,9 @@
+<a name="1.0.0"></a>
+# [1.0.0](https://github.com/raulsebastianmihaila/crizmas-components/compare/v0.3.3...v1.0.0) (2017-07-30)
+
+### Updates
+- Updated the version of crizmas-utils peer dependency.
+
 <a name="0.3.3"></a>
 # [0.3.3](https://github.com/raulsebastianmihaila/crizmas-components/compare/v0.3.2...v0.3.3) (2017-06-23)
 
