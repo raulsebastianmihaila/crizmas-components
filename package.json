@@ -2,13 +2,14 @@
   "name": "crizmas-components",
   "version": "1.0.1",
   "description": "Components package used in conjunction with the crizmas-mvc framework.",
+  "license": "MIT",
   "private": true,
   "author": {
     "name": "Raul-Sebastian Mihăilă",
     "email": "raul.mihaila@gmail.com"
   },
   "peerDependencies": {
-    "crizmas-utils": "^1.0.0",
+    "crizmas-utils": "^1.0.1",
     "prop-types": "^15.5.10",
     "react": "^15.5.4 || ^16.0.0"
   },
