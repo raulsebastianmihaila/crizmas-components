@@ -110,17 +110,17 @@
       this.setOnChangeMethod();
     }
 
-    componentWillReceiveProps(newProps) {
-      if (newProps.debounce !== this.props.debounce) {
+    componentDidUpdate(prevProps) {
+      if (this.props.debounce !== prevProps.debounce) {
         this.setOnChangeMethod();
       }
 
       // we must ignore the same value when we have an intermediary string representation
       // like 3.20 (after the 0 there can be a new decimal)
-      if (!newProps.isInputPending && newProps.value !== this.state.oldValue) {
+      if (!this.props.isInputPending && this.props.value !== this.state.oldValue) {
         this.setState({
-          value: newProps.value,
-          oldValue: newProps.value
+          value: this.props.value,
+          oldValue: this.props.value
         });
       }
     }
@@ -207,7 +207,7 @@
             readOnly,
             disabled,
             autoFocus,
-            className: inputClassName,
+            className: inputClassName
           }
         )),
         hasErrors && createElement('span', null,
