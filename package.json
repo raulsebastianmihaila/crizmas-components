@@ -9,9 +9,11 @@
     "email": "raul.mihaila@gmail.com"
   },
   "peerDependencies": {
+    "crizmas-mvc": "^1.0.3",
     "crizmas-utils": "^1.0.3",
     "prop-types": "^15.6.2",
-    "react": "^16.5.2"
+    "react": "^16.5.2",
+    "smart-mix": "^1.0.1"
   },
   "homepage": "https://raulsebastianmihaila.github.io/crizmas-mvc-docs",
   "repository": {

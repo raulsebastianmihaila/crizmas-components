@@ -3,6 +3,8 @@
 
   const isModule = typeof module === 'object' && typeof module.exports === 'object';
 
+  let fitContentValue;
+
   const debounce = (func, delay) => {
     let timeout;
 
@@ -18,8 +20,29 @@
     }).function;
   };
 
+  const getFitContentValue = () => {
+    if (!fitContentValue) {
+      fitContentValue = detectFitContentValue();
+    }
+
+    return fitContentValue;
+  };
+
+  const detectFitContentValue = () => {
+    const div = document.createElement('div');
+
+    div.style.width = 'fit-content';
+
+    if (div.style.width === 'fit-content') {
+      return 'fit-content';
+    }
+
+    return '-moz-fit-content';
+  };
+
   const moduleExports = {
-    debounce
+    debounce,
+    getFitContentValue
   };
 
   if (isModule) {

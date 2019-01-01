@@ -1,3 +1,9 @@
+<a name="1.1.0"></a>
+# [1.1.0](https://github.com/raulsebastianmihaila/crizmas-components/compare/v1.0.3...v1.1.0) (2019-01-29)
+
+### Updates
+- Add render clip and tree components and controllers.
+
 <a name="1.0.3"></a>
 # [1.0.3](https://github.com/raulsebastianmihaila/crizmas-components/compare/v1.0.2...v1.0.3) (2018-12-08)
 
