@@ -217,6 +217,8 @@
     }
   }
 
+  Input.inputContext = React.createContext();
+
   Input.propTypes = {
     value: PropTypes.any,
     initialValue: PropTypes.any,
@@ -242,9 +244,7 @@
     className: ''
   };
 
-  Input.contextTypes = {
-    inputDebounce: PropTypes.number
-  };
+  Input.contextType = Input.inputContext;
 
   const moduleExports = Input;
 
