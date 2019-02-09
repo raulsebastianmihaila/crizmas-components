@@ -6,17 +6,30 @@
   const isModule = typeof module === 'object' && typeof module.exports === 'object';
 
   let Mvc;
+  let utils;
   let renderClip1DMixin;
+  let renderClipSameSize1DMixin;
+  let renderClipIndividualSize1DMixin;
 
   if (isModule) {
     Mvc = require('crizmas-mvc');
+    utils = require('crizmas-utils');
     renderClip1DMixin = require('./render-clip-1d-mixin');
+    renderClipSameSize1DMixin = require('./render-clip-same-size-1d-mixin.js');
+    renderClipIndividualSize1DMixin = require('./render-clip-individual-size-1d-mixin.js');
   } else {
-    ({Mvc, renderClip1DMixin} = window.crizmas);
+    ({Mvc, utils, renderClip1DMixin, renderClipSameSize1DMixin,
+      renderClipIndividualSize1DMixin} = window.crizmas);
   }
 
+  const {isFunc} = utils;
   const {getRenderClipControllerObject, getRenderClipMixStateObject,
     defineRenderClipControllerAccessors} = renderClip1DMixin;
+  const {getRenderClipSameSizeMixStateExtraObject,
+    defineRenderClipSameSizeControllerExtraAccessors} = renderClipSameSize1DMixin;
+  const {getRenderClipIndividualSizeControllerExtraObject,
+    getRenderClipIndividualSizeMixStateExtraObject,
+    defineRenderClipIndividualSizeControllerExtraAccessors} = renderClipIndividualSize1DMixin;
 
   const RenderClip1D = Mvc.controller(function RenderClip1D({
     items,
@@ -44,8 +57,55 @@
         'scrollTo'
       ]
     });
+    const isSameItemSize = !isFunc(itemHeight) && !isFunc(itemWidth);
+    const renderClipExtraMix = isSameItemSize
+      ? renderClipSameSize1DMixin({
+        context: ctrl,
+        state: renderClipMixState,
+        mixMethods: [
+          'init',
+          'getRealItemSize'
+        ]
+      })
+      : renderClipIndividualSize1DMixin({
+        context: ctrl,
+        state: renderClipMixState,
+        mixMethods: [
+          'init',
+          'getGetRealItemSizeDefinition'
+        ]
+      });
 
-    defineRenderClipControllerAccessors(ctrl, renderClipMixState);
+    const define = () => {
+      defineRenderClipControllerAccessors(ctrl, renderClipMixState);
+
+      if (isSameItemSize) {
+        Object.assign(renderClipMixState, getRenderClipSameSizeMixStateExtraObject());
+        defineRenderClipSameSizeControllerExtraAccessors(ctrl, renderClipMixState);
+      } else {
+        Object.assign(ctrl, getRenderClipIndividualSizeControllerExtraObject());
+        Object.assign(renderClipMixState, getRenderClipIndividualSizeMixStateExtraObject());
+        defineRenderClipIndividualSizeControllerExtraAccessors(ctrl, renderClipMixState);
+      }
+    };
+
+    const init = () => {
+      renderClipMix.init({
+        items,
+        itemsCount,
+        itemHeight
+      });
+
+      // we init from mix before so we know if it's vertical or horizontal
+      ctrl.getRealItemSize = isSameItemSize
+        ? Mvc.ignore(renderClipExtraMix.getRealItemSize)
+        : Mvc.ignore(renderClipExtraMix.getGetRealItemSizeDefinition(itemHeight, itemWidth));
+
+      renderClipExtraMix.init({
+        itemHeight,
+        itemWidth
+      });
+    };
 
     renderClipMixState.refreshWithCurrentRealScrollPosition =
       Mvc.observe(renderClipMix.refreshWithCurrentRealScrollPosition);
@@ -54,12 +114,8 @@
 
     ctrl.onRender = Mvc.ignore(renderClipMix.onRender);
 
-    renderClipMix.init({
-      items,
-      itemsCount,
-      itemHeight,
-      itemWidth
-    });
+    define();
+    init();
 
     return ctrl;
   });

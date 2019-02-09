@@ -1,3 +1,12 @@
+<a name="1.2.0"></a>
+# [1.2.0](https://github.com/raulsebastianmihaila/crizmas-components/compare/v1.1.0...v1.2.0) (2019-02-16)
+
+### Updates
+- Allow specifying individual sizes for items for `RenderClipController` and `RenderClip2DController`.
+
+### Fixes
+- Fix the scroll position when changing the `RenderClip` items from virtualized to non-virtualized.
+
 <a name="1.1.0"></a>
 # [1.1.0](https://github.com/raulsebastianmihaila/crizmas-components/compare/v1.0.3...v1.1.0) (2019-01-29)
 

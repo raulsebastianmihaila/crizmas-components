@@ -28,7 +28,6 @@
   };
 
   const getRenderClipControllerObject = () => ({
-    realItemSize: 0,
     direction: null,
     renderedItemsStartIndex: 0,
     renderedItemsCount: 0,
@@ -39,9 +38,15 @@
     itemsCount: 0,
     items: null,
     domContainer: null,
+    realScrollPosition: 0,
     lastOperationForSizeSync: null,
     prevIsOrthogonalOverflow: false,
-    refreshWithCurrentRealScrollPosition: null
+    getRealItemPosition: null,
+    updateRenderingInfoOnItemsCountChange: null,
+    updateNonVirtualized: null,
+    templateUpdateNonVirtualized: null,
+    updateRenderedItems: null,
+    setPreservingRealScrollPosition: null
   });
 
   const defineRenderClipControllerAccessors = (ctrl, mixState) =>
@@ -86,10 +91,6 @@
         return mixState.domContainer[ctrl.orthogonalScrollSizeProp];
       },
 
-      get realTotalItemsSize() {
-        return mixState.itemsCount * ctrl.realItemSize;
-      },
-
       get virtualTotalItemsSize() {
         return Math.min(ctrl.realTotalItemsSize, maxAllowedVirtualTotalItemsSize);
       },
@@ -118,17 +119,10 @@
 
       get isOrthogonalOverflow() {
         return ctrl.containerOrthogonalScrollSize > ctrl.containerOrthogonalClientSize;
-      },
-
-      get isVirtualizationEmptySpace() {
-        return ctrl.isScrollVirtualized
-          && ctrl.renderedItemsCount * ctrl.realItemSize + ctrl.trimmedStartNegativeSize
-            < ctrl.containerClientSize;
       }
     }));
 
   const renderClip1DMixin = mixin((ctrl, mixState) => {
-    let realScrollPosition = 0;
     let currentVirtualScrollPosition = 0;
     let preserveRealScrollPosition = false;
     let lastPreserveRealScrollVirtualScrollPosition = null;
@@ -138,19 +132,15 @@
     ctrlMix.init = ({
       items: items_,
       itemsCount: itemsCount_ = items_ ? items_.length : 0,
-      itemHeight,
-      itemWidth
+      itemHeight
     }) => {
-      if (!itemHeight && !itemWidth) {
-        throw new Error('Either itemHeight or itemWidth must be specified.');
-      }
-
       checkItemsCountConsistency(items_, itemsCount_);
 
       mixState.itemsCount = itemsCount_;
       mixState.items = items_;
+      mixState.templateUpdateNonVirtualized = templateUpdateNonVirtualized;
+      mixState.setPreservingRealScrollPosition = setPreservingRealScrollPosition;
 
-      ctrl.realItemSize = itemHeight || itemWidth;
       ctrl.direction = itemHeight ? directions.vertical : directions.horizontal;
     };
 
@@ -177,14 +167,7 @@
 
       mixState.itemsCount = itemsCount_;
 
-      const renderedItemsEndDif = ctrl.renderedItemsStartIndex + ctrl.renderedItemsCount
-        - mixState.itemsCount;
-
-      if (renderedItemsEndDif > 0) {
-        ctrl.renderedItemsCount = Math.min(ctrl.renderedItemsCount, mixState.itemsCount);
-        ctrl.renderedItemsStartIndex = mixState.itemsCount - ctrl.renderedItemsCount;
-      }
-
+      mixState.updateRenderingInfoOnItemsCountChange();
       ctrl.refresh();
     };
 
@@ -195,16 +178,16 @@
       preserveRealScrollPosition = true;
 
       if (!ctrl.isScrollVirtualized) {
-        return void updateNonVirtualized();
+        return void mixState.updateNonVirtualized();
       }
 
       // it's possible that the content changed and now there's less
-      realScrollPosition = Math.min(realScrollPosition, ctrl.realScrollSpace);
+      mixState.realScrollPosition = Math.min(mixState.realScrollPosition, ctrl.realScrollSpace);
 
       let virtualScrollPosition;
 
       // it's possible that truncating the virtual scroll position results in extra virtual content
-      if (realScrollPosition === ctrl.realScrollSpace) {
+      if (mixState.realScrollPosition === ctrl.realScrollSpace) {
         virtualScrollPosition = ctrl.virtualMaxScrollPosition;
       } else {
         // the virtual scroll position is computed based on the real scroll position,
@@ -212,12 +195,12 @@
         // is too great and it's important when comparing the result with the current
         // dom scroll position
         virtualScrollPosition = Math.min(
-          Math.trunc(realScrollPosition / ctrl.realVirtualScrollSpaceRatio),
+          Math.trunc(mixState.realScrollPosition / ctrl.realVirtualScrollSpaceRatio),
           ctrl.virtualMaxScrollPosition);
 
         // when truncating the virtual scroll position it's possible that it becomes 0 even though
         // there is still some content before
-        if (!virtualScrollPosition && realScrollPosition > 0) {
+        if (!virtualScrollPosition && mixState.realScrollPosition > 0) {
           virtualScrollPosition = 1;
         }
       }
@@ -229,57 +212,41 @@
         isVirtualScrollPositionSetProgramatically = true;
         mixState.domContainer[ctrl.scrollPositionProp] = virtualScrollPosition;
       } else {
-        updateRenderedItems();
+        mixState.updateRenderedItems();
       }
     };
 
-    const updateNonVirtualized = () => {
+    const templateUpdateNonVirtualized = ({afterUpdatingRenderingInfoHook} = {}) => {
       ctrl.renderedItemsStartIndex = 0;
       ctrl.renderedItemsCount = mixState.domContainer ? mixState.itemsCount : 0;
       ctrl.trimmedStartNegativeSize = 0;
+
+      if (afterUpdatingRenderingInfoHook) {
+        afterUpdatingRenderingInfoHook();
+      }
 
       if (mixState.domContainer) {
         currentVirtualScrollPosition = ctrl.containerScrollPosition;
 
         // the list may become non-virtualized without any scroll position change
         // by changing the content
-        if (preserveRealScrollPosition) {
-          if (ctrl.containerScrollPosition !== realScrollPosition) {
-            isVirtualScrollPositionSetProgramatically = true;
-            mixState.domContainer[ctrl.scrollPositionProp] = realScrollPosition;
-          }
-        } else {
-          realScrollPosition = ctrl.containerScrollPosition;
+        if (preserveRealScrollPosition
+          && ctrl.containerScrollPosition !== mixState.realScrollPosition) {
+          mixState.domContainer[ctrl.scrollPositionProp] = mixState.realScrollPosition;
         }
+
+        mixState.realScrollPosition = ctrl.containerScrollPosition;
       } else {
-        realScrollPosition = 0;
+        mixState.realScrollPosition = 0;
         currentVirtualScrollPosition = 0;
       }
     };
 
-    const updateRenderedItems = () => {
-      realScrollPosition = preserveRealScrollPosition
+    const setPreservingRealScrollPosition = () => {
+      mixState.realScrollPosition = preserveRealScrollPosition
         && lastPreserveRealScrollVirtualScrollPosition === ctrl.containerScrollPosition
-          ? realScrollPosition
+          ? mixState.realScrollPosition
           : ctrl.containerScrollPosition * ctrl.realVirtualScrollSpaceRatio;
-
-      const realBeforeViewportWholeItemsCount = getWholeRealItemsCountInSpace(realScrollPosition);
-      const realAfterViewportWholeItemsCount = getWholeRealItemsCountInSpace(
-        ctrl.realTotalItemsSize - realScrollPosition - ctrl.containerClientSize);
-      // can include partially visible items
-      const realViewportItemsCount = mixState.itemsCount - realBeforeViewportWholeItemsCount
-        - realAfterViewportWholeItemsCount;
-      const realBeforeViewportWholeItemsSize = realBeforeViewportWholeItemsCount
-        * ctrl.realItemSize;
-      const realStartTrimmedSize = realScrollPosition - realBeforeViewportWholeItemsSize;
-
-      ctrl.renderedItemsStartIndex = realBeforeViewportWholeItemsCount;
-      ctrl.renderedItemsCount = realViewportItemsCount;
-      ctrl.trimmedStartNegativeSize = -realStartTrimmedSize;
-    };
-
-    const getWholeRealItemsCountInSpace = (space) => {
-      return Math.floor(space / ctrl.realItemSize);
     };
 
     ctrlMix.onRender = ({afterSizeSyncChecksHook} = {}) => {
@@ -330,7 +297,7 @@
       isVirtualScrollPositionSetProgramatically = false;
 
       if (!ctrl.isScrollVirtualized) {
-        return void updateNonVirtualized();
+        return void mixState.updateNonVirtualized();
       }
 
       let scrollDif = ctrl.containerScrollPosition - currentVirtualScrollPosition;
@@ -343,14 +310,14 @@
         scrollDif = Math.sign(scrollDif)
           * Math.max(Math.abs(scrollDif), smoothTranslatedVirtualizationScrollDif);
 
-        return void refreshWithRealScrollPosition(realScrollPosition + scrollDif);
+        return void refreshWithRealScrollPosition(mixState.realScrollPosition + scrollDif);
       }
 
-      updateRenderedItems();
+      mixState.updateRenderedItems();
     };
 
     const refreshWithRealScrollPosition = (realScrollPosition_) => {
-      realScrollPosition = Math.min(
+      mixState.realScrollPosition = Math.min(
         Math.max(0, realScrollPosition_),
         ctrl.realScrollSpace);
 
@@ -377,17 +344,21 @@
       // will be aligned to the end and if it's before the viewport, the result
       // will be aligned to the start.
 
-      let realIndexScrollPosition = index * ctrl.realItemSize;
-      const realIndexEndAlignedScrollTop = getRealEndAlignedScrollPosition(realIndexScrollPosition);
+      index = Math.max(Math.min(index, mixState.itemsCount - 1), 0);
+
+      const realIndexScrollPosition = mixState.getRealItemPosition(index);
+      const realIndexEndAlignedScrollTop = Math.max(
+        0,
+        realIndexScrollPosition - ctrl.containerClientSize + ctrl.getRealItemSize(index));
 
       if (ifNeeded || fit) {
-        if (realIndexScrollPosition >= realScrollPosition
-          && realScrollPosition >= realIndexEndAlignedScrollTop) {
-          return realScrollPosition;
+        if (realIndexScrollPosition >= mixState.realScrollPosition
+          && mixState.realScrollPosition >= realIndexEndAlignedScrollTop) {
+          return mixState.realScrollPosition;
         }
 
-        if (fit && Math.abs(realScrollPosition - realIndexEndAlignedScrollTop)
-          < Math.abs(realScrollPosition - realIndexScrollPosition)) {
+        if (fit && Math.abs(mixState.realScrollPosition - realIndexEndAlignedScrollTop)
+          < Math.abs(mixState.realScrollPosition - realIndexScrollPosition)) {
           return realIndexEndAlignedScrollTop;
         }
       }
@@ -398,9 +369,6 @@
 
       return realIndexScrollPosition;
     };
-
-    const getRealEndAlignedScrollPosition = (realScrollPosition) =>
-      realScrollPosition - ctrl.containerClientSize + ctrl.realItemSize;
 
     ctrlMix.scrollToFit = (index) => ctrlMix.scrollIntoView(index, {fit: true});
 

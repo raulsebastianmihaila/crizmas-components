@@ -93,14 +93,13 @@
           ...nodeSubtreeArray,
           ...afterArray
         ];
-
-        ctrl.renderClipController.setItemsCount(treeArray.length);
       } else {
         const nodeSubtreeLength = getSubTreeNodeLength(treeNode);
 
         treeArray.splice(treeNodeIndex + 1, nodeSubtreeLength);
-        ctrl.renderClipController.setItemsCount(treeArray.length);
       }
+
+      ctrl.renderClipController.setItemsCount(treeArray.length);
     };
 
     const getSubTreeNodeLength = (treeNode) => {

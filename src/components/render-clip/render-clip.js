@@ -114,7 +114,7 @@
     render() {
       const {
         controller: {renderedItemsStartIndex, renderedItemsCount, trimmedStartNegativeSize,
-          virtualTotalItemsSize, realItemSize, isScrollVirtualized, items, onScroll},
+          virtualTotalItemsSize, isScrollVirtualized, items, getRealItemSize, onScroll},
         renderItem
       } = this.props;
 
@@ -129,7 +129,7 @@
           },
           onScroll
         },
-        renderedItemsCount && createElement('div', {
+        !!renderedItemsCount && createElement('div', {
             ref: this.renderedItemsRef,
             style: isScrollVirtualized
               ? {
@@ -149,11 +149,11 @@
 
               return renderItem({
                 index: itemIndex,
-                [this.itemSizeProp]: realItemSize,
+                [this.itemSizeProp]: getRealItemSize(itemIndex),
                 ...items && {item: items[itemIndex]}
               });
             }))),
-        renderedItemsCount && isScrollVirtualized && createElement('div', {
+        !!renderedItemsCount && isScrollVirtualized && createElement('div', {
           style: {
             position: 'absolute',
             left: 0,

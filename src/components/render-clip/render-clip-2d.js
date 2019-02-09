@@ -91,8 +91,8 @@
           },
           onScroll
         },
-        verticalRenderClipController.renderedItemsCount
-          && horizontalRenderClipController.renderedItemsCount
+        !!verticalRenderClipController.renderedItemsCount
+          && !!horizontalRenderClipController.renderedItemsCount
           && createElement('div', {
               style: {
                 position: 'sticky',
@@ -128,18 +128,23 @@
 
                   return renderRow({
                     index: rowIndex,
-                    itemHeight: verticalRenderClipController.realItemSize,
+                    itemHeight: verticalRenderClipController.getRealItemSize(rowIndex),
                     renderCells: () => Array.from(
                       {length: horizontalRenderClipController.renderedItemsCount},
-                      (v, index) => renderCell({
-                        index: horizontalRenderClipController.renderedItemsStartIndex + index,
-                        itemWidth: horizontalRenderClipController.realItemSize,
-                        itemHeight: verticalRenderClipController.realItemSize,
-                        rowIndex
-                      }))
+                      (v, index) => {
+                        const cellIndex = horizontalRenderClipController.renderedItemsStartIndex
+                          + index;
+
+                        return renderCell({
+                          index: cellIndex,
+                          itemWidth: horizontalRenderClipController.getRealItemSize(cellIndex),
+                          itemHeight: verticalRenderClipController.getRealItemSize(rowIndex),
+                          rowIndex
+                        });
+                      })
                   });
                 }))),
-        verticalRenderClipController.renderedItemsCount
+        !!verticalRenderClipController.renderedItemsCount
           && verticalRenderClipController.isScrollVirtualized
           && createElement('div', {
             style: {
@@ -151,7 +156,7 @@
               height: verticalRenderClipController.virtualTotalItemsSize
             }
           }),
-        horizontalRenderClipController.renderedItemsCount
+        !!horizontalRenderClipController.renderedItemsCount
           && horizontalRenderClipController.isScrollVirtualized
           && createElement('div', {
             style: {
