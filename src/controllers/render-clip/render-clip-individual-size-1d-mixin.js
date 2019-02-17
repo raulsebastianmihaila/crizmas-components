@@ -113,7 +113,7 @@
 
     const getLastItemInSpaceInfo = (position) => {
       // due to the number type it's possible that the calculated position exceeds the limit
-      position = Math.min(position, mixState.getRealItemPosition(mixState.itemsCount));
+      position = Math.min(position, ctrl.realTotalItemsSize);
 
       let lastItemIndexInSpace;
 

@@ -80,7 +80,7 @@
     };
 
     const getWholeRealItemsCountInSpace = (space) => {
-      return Math.floor(space / mixState.realItemSize);
+      return Math.trunc(space / mixState.realItemSize);
     };
 
     return ctrlMix;

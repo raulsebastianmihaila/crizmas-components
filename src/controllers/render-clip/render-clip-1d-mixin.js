@@ -96,21 +96,19 @@
       },
 
       get realVirtualScrollSpaceRatio() {
-        const virtualScrollSpace = ctrl.virtualTotalItemsSize - ctrl.containerClientSize;
-
-        return ctrl.realScrollSpace / virtualScrollSpace;
+        return ctrl.realScrollSpace / ctrl.virtualScrollSpace;
       },
 
-      get isScrollVirtualized() {
-        return !!mixState.domContainer && ctrl.virtualTotalItemsSize > ctrl.containerClientSize * 3;
-      },
-
-      get virtualMaxScrollPosition() {
+      get virtualScrollSpace() {
         return ctrl.virtualTotalItemsSize - ctrl.containerClientSize;
       },
 
       get realScrollSpace() {
         return ctrl.realTotalItemsSize - ctrl.containerClientSize;
+      },
+
+      get isScrollVirtualized() {
+        return !!mixState.domContainer && ctrl.virtualTotalItemsSize > ctrl.containerClientSize * 3;
       },
 
       get isTranslatedVirtualization() {
@@ -188,7 +186,7 @@
 
       // it's possible that truncating the virtual scroll position results in extra virtual content
       if (mixState.realScrollPosition === ctrl.realScrollSpace) {
-        virtualScrollPosition = ctrl.virtualMaxScrollPosition;
+        virtualScrollPosition = ctrl.virtualScrollSpace;
       } else {
         // the virtual scroll position is computed based on the real scroll position,
         // but it's possible that the translated real scroll position into the virtual one
@@ -196,7 +194,7 @@
         // dom scroll position
         virtualScrollPosition = Math.min(
           Math.trunc(mixState.realScrollPosition / ctrl.realVirtualScrollSpaceRatio),
-          ctrl.virtualMaxScrollPosition);
+          ctrl.virtualScrollSpace);
 
         // when truncating the virtual scroll position it's possible that it becomes 0 even though
         // there is still some content before
