@@ -18,9 +18,10 @@
   }
 
   const {Component, createElement} = React;
-  const {getFitContentValue} = componentUtils;
+  const {getFitContentValue, getStickyValue} = componentUtils;
 
   const fitContentValue = getFitContentValue();
+  const stickyValue = getStickyValue();
 
   class RenderClip extends Component {
     constructor() {
@@ -133,7 +134,7 @@
             ref: this.renderedItemsRef,
             style: isScrollVirtualized
               ? {
-                position: 'sticky',
+                position: stickyValue,
                 [this.paddingPosition]: 0,
                 [this.orthogonalSizeProp]: fitContentValue,
                 [this.sizeProp]: '100%',

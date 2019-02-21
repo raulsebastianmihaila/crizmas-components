@@ -80,7 +80,10 @@
       },
 
       get containerScrollPosition() {
-        return mixState.domContainer[ctrl.scrollPositionProp];
+        // Safari can give out of bounds values for the scroll position
+        return Math.min(
+          Math.max(0, mixState.domContainer[ctrl.scrollPositionProp]),
+          ctrl.virtualScrollSpace);
       },
 
       get containerOrthogonalClientSize() {

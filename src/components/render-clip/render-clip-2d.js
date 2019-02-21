@@ -18,9 +18,10 @@
   }
 
   const {Component, createElement} = React;
-  const {getFitContentValue} = componentUtils;
+  const {getFitContentValue, getStickyValue} = componentUtils;
 
   const fitContentValue = getFitContentValue();
+  const stickyValue = getStickyValue();
 
   class RenderClip2D extends Component {
     constructor() {
@@ -95,7 +96,7 @@
           && !!horizontalRenderClipController.renderedItemsCount
           && createElement('div', {
               style: {
-                position: 'sticky',
+                position: stickyValue,
                 top: verticalRenderClipController.isScrollVirtualized ? 0 : 'unset',
                 left: horizontalRenderClipController.isScrollVirtualized ? 0 : 'unset',
                 height: verticalRenderClipController.isScrollVirtualized

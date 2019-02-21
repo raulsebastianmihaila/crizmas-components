@@ -4,6 +4,7 @@
   const isModule = typeof module === 'object' && typeof module.exports === 'object';
 
   let fitContentValue;
+  let stickyValue;
 
   const debounce = (func, delay) => {
     let timeout;
@@ -40,9 +41,31 @@
     return '-moz-fit-content';
   };
 
+  const getStickyValue = () => {
+    if (!stickyValue) {
+      stickyValue = detectStickyValue();
+    }
+
+    return stickyValue;
+  };
+
+  const detectStickyValue = () => {
+    const div = document.createElement('div');
+
+    div.style.position = 'sticky';
+
+    if (div.style.position === 'sticky') {
+      return 'sticky';
+    }
+
+    // Safari requires the prefix
+    return '-webkit-sticky';
+  };
+
   const moduleExports = {
     debounce,
-    getFitContentValue
+    getFitContentValue,
+    getStickyValue
   };
 
   if (isModule) {
