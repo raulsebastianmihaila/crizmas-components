@@ -39,10 +39,11 @@
     items: null,
     domContainer: null,
     realScrollPosition: 0,
+    setItemsCount: null,
+    templateSetItemsCount: null,
     lastOperationForSizeSync: null,
     prevIsOrthogonalOverflow: false,
     getRealItemPosition: null,
-    updateRenderingInfoOnItemsCountChange: null,
     updateNonVirtualized: null,
     templateUpdateNonVirtualized: null,
     updateRenderedItems: null,
@@ -131,15 +132,16 @@
     const ctrlMix = {};
 
     ctrlMix.init = ({
-      items: items_,
-      itemsCount: itemsCount_ = items_ ? items_.length : 0,
+      items,
+      itemsCount = items ? items.length : 0,
       itemHeight
     }) => {
-      checkItemsCountConsistency(items_, itemsCount_);
+      checkItemsCountConsistency(items, itemsCount);
 
-      mixState.itemsCount = itemsCount_;
-      mixState.items = items_;
+      mixState.itemsCount = itemsCount;
+      mixState.items = items;
       mixState.templateUpdateNonVirtualized = templateUpdateNonVirtualized;
+      mixState.templateSetItemsCount = templateSetItemsCount;
       mixState.setPreservingRealScrollPosition = setPreservingRealScrollPosition;
 
       ctrl.direction = itemHeight ? directions.vertical : directions.horizontal;
@@ -151,24 +153,31 @@
       }
     };
 
-    ctrlMix.setDomContainer = (domContainer_) => {
-      mixState.domContainer = domContainer_;
+    ctrlMix.setDomContainer = (domContainer) => {
+      mixState.domContainer = domContainer;
 
       ctrl.refresh();
     };
 
-    ctrlMix.setItems = (items_) => {
-      mixState.items = items_;
+    ctrlMix.setItems = (items) => {
+      mixState.items = items;
 
       ctrlMix.setItemsCount(mixState.items.length);
     };
 
-    ctrlMix.setItemsCount = (itemsCount_) => {
-      checkItemsCountConsistency(mixState.items, itemsCount_);
+    ctrlMix.setItemsCount = (itemsCount) => {
+      return mixState.setItemsCount(itemsCount);
+    };
 
-      mixState.itemsCount = itemsCount_;
+    const templateSetItemsCount = (itemsCount, {afterUpdatingItemsCountHook} = {}) => {
+      checkItemsCountConsistency(mixState.items, itemsCount);
 
-      mixState.updateRenderingInfoOnItemsCountChange();
+      mixState.itemsCount = itemsCount;
+
+      if (afterUpdatingItemsCountHook) {
+        afterUpdatingItemsCountHook();
+      }
+
       ctrl.refresh();
     };
 
@@ -209,12 +218,14 @@
       lastPreserveRealScrollVirtualScrollPosition = virtualScrollPosition;
 
       if (ctrl.containerScrollPosition !== virtualScrollPosition) {
-        // the rendered items will be updated during the next scroll event handling
+        // the rendered items will be updated during the next scroll event handling as well
         isVirtualScrollPositionSetProgramatically = true;
         mixState.domContainer[ctrl.scrollPositionProp] = virtualScrollPosition;
-      } else {
-        mixState.updateRenderedItems();
       }
+
+      // it's better to always update the items even if the scroll position changes
+      // because if the items changed we don't want to wait for the scroll event
+      mixState.updateRenderedItems();
     };
 
     const templateUpdateNonVirtualized = ({afterUpdatingRenderingInfoHook} = {}) => {

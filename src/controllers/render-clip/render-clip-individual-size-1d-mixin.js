@@ -40,8 +40,8 @@
         throw new Error('Either itemHeight or itemWidth must be provided.');
       }
 
+      mixState.setItemsCount = setItemsCount;
       mixState.getRealItemPosition = getRealItemPosition;
-      mixState.updateRenderingInfoOnItemsCountChange = updateRenderingInfoOnItemsCountChange;
       mixState.updateNonVirtualized = updateNonVirtualized;
       mixState.updateRenderedItems = updateRenderedItems;
 
@@ -51,6 +51,12 @@
     ctrlMix.getGetRealItemSizeDefinition = (itemHeight, itemWidth) => ctrl.isVertical
       ? (index) => itemHeight(index, mixState.items && mixState.items[index])
       : (index) => itemWidth(index, mixState.items && mixState.items[index]);
+
+    const setItemsCount = (itemsCount) => mixState.templateSetItemsCount(itemsCount, {
+      afterUpdatingItemsCountHook: () => {
+        setRealTotalItemsSize();
+      }
+    });
 
     const getRealItemPosition = (index) => itemsPositions[index];
 
@@ -71,18 +77,6 @@
       itemsPositions[itemsCount] = space;
 
       return space;
-    };
-
-    const updateRenderingInfoOnItemsCountChange = () => {
-      setRealTotalItemsSize();
-
-      // since we don't know at this point what is going to be visible, because
-      // the items can have different sizes, we need to refresh and because we don't know
-      // whether there will be an intermediate rendering (because of potentially updating
-      // the scroll position when refreshing) we must reset the rendered items info.
-      ctrl.renderedItemsCount = 0;
-      ctrl.renderedItemsStartIndex = 0;
-      mixState.totalRenderedItemsSize = 0;
     };
 
     const updateNonVirtualized = () => mixState.templateUpdateNonVirtualized({

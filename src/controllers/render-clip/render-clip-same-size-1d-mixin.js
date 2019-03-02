@@ -42,23 +42,13 @@
       }
 
       mixState.realItemSize = itemHeight || itemWidth;
+      mixState.setItemsCount = mixState.templateSetItemsCount;
       mixState.getRealItemPosition = getRealItemPosition;
-      mixState.updateRenderingInfoOnItemsCountChange = updateRenderingInfoOnItemsCountChange;
       mixState.updateNonVirtualized = mixState.templateUpdateNonVirtualized;
       mixState.updateRenderedItems = updateRenderedItems;
     };
 
     const getRealItemPosition = (index) => index * mixState.realItemSize;
-
-    const updateRenderingInfoOnItemsCountChange = () => {
-      const renderedItemsEndDif = ctrl.renderedItemsStartIndex + ctrl.renderedItemsCount
-        - mixState.itemsCount;
-
-      if (renderedItemsEndDif > 0) {
-        ctrl.renderedItemsCount = Math.min(ctrl.renderedItemsCount, mixState.itemsCount);
-        ctrl.renderedItemsStartIndex = mixState.itemsCount - ctrl.renderedItemsCount;
-      }
-    };
 
     const updateRenderedItems = () => {
       mixState.setPreservingRealScrollPosition();
