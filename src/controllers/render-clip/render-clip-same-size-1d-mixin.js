@@ -11,22 +11,21 @@
     ({mixin} = window);
   }
 
-  const getRenderClipSameSizeMixStateExtraObject = () => ({
-    realItemSize: 0
+  const getExtraContext = (ctrl, mixState) => ({
+    get realTotalItemsSize() {
+      return mixState.itemsCount * mixState.realItemSize;
+    },
+
+    get isVirtualizationEmptySpace() {
+      return ctrl.isScrollVirtualized
+        && ctrl.renderedItemsCount * mixState.realItemSize + ctrl.trimmedStartNegativeSize
+          < ctrl.containerClientSize;
+    }
   });
 
-  const defineRenderClipSameSizeControllerExtraAccessors = (ctrl, mixState) =>
-    Object.defineProperties(ctrl, Object.getOwnPropertyDescriptors({
-      get realTotalItemsSize() {
-        return mixState.itemsCount * mixState.realItemSize;
-      },
-
-      get isVirtualizationEmptySpace() {
-        return ctrl.isScrollVirtualized
-          && ctrl.renderedItemsCount * mixState.realItemSize + ctrl.trimmedStartNegativeSize
-            < ctrl.containerClientSize;
-      }
-    }));
+  const getExtraState = () => ({
+    realItemSize: 0
+  });
 
   const renderClipSameSize1DMixin = mixin((ctrl, mixState) => {
     const ctrlMix = {};
@@ -76,10 +75,8 @@
     return ctrlMix;
   });
 
-  renderClipSameSize1DMixin.getRenderClipSameSizeMixStateExtraObject =
-    getRenderClipSameSizeMixStateExtraObject;
-  renderClipSameSize1DMixin.defineRenderClipSameSizeControllerExtraAccessors =
-    defineRenderClipSameSizeControllerExtraAccessors;
+  renderClipSameSize1DMixin.getContext = getExtraContext;
+  renderClipSameSize1DMixin.getState = getExtraState;
 
   const moduleExports = renderClipSameSize1DMixin;
 

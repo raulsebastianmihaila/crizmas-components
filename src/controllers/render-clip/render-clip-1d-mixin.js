@@ -27,14 +27,87 @@
     horizontal: Symbol('horizontal')
   };
 
-  const getRenderClipControllerObject = () => ({
+  const getContext = (ctrl, mixState) => ({
     direction: null,
     renderedItemsStartIndex: 0,
     renderedItemsCount: 0,
-    trimmedStartNegativeSize: 0
+    trimmedStartNegativeSize: 0,
+
+    get items() {
+      return mixState.items;
+    },
+
+    get isVertical() {
+      return ctrl.direction === directions.vertical;
+    },
+
+    get clientSizeProp() {
+      return ctrl.isVertical ? 'clientHeight' : 'clientWidth';
+    },
+
+    get scrollPositionProp() {
+      return ctrl.isVertical ? 'scrollTop' : 'scrollLeft';
+    },
+
+    get orthogonalClientSizeProp() {
+      return ctrl.isVertical ? 'clientWidth' : 'clientHeight';
+    },
+
+    get orthogonalScrollSizeProp() {
+      return ctrl.isVertical ? 'scrollWidth' : 'scrollHeight';
+    },
+
+    get containerClientSize() {
+      return mixState.domContainer[ctrl.clientSizeProp];
+    },
+
+    get containerScrollPosition() {
+      // Safari can give out of bounds values for the scroll position
+      return Math.min(
+        Math.max(0, mixState.domContainer[ctrl.scrollPositionProp]),
+        ctrl.virtualScrollSpace);
+    },
+
+    get containerOrthogonalClientSize() {
+      return mixState.domContainer[ctrl.orthogonalClientSizeProp];
+    },
+
+    get containerOrthogonalScrollSize() {
+      return mixState.domContainer[ctrl.orthogonalScrollSizeProp];
+    },
+
+    get virtualTotalItemsSize() {
+      return Math.min(ctrl.realTotalItemsSize, maxAllowedVirtualTotalItemsSize);
+    },
+
+    get realVirtualScrollSpaceRatio() {
+      return !ctrl.virtualScrollSpace && !ctrl.realScrollSpace
+        ? 1
+        : ctrl.realScrollSpace / ctrl.virtualScrollSpace;
+    },
+
+    get virtualScrollSpace() {
+      return Math.max(0, ctrl.virtualTotalItemsSize - ctrl.containerClientSize);
+    },
+
+    get realScrollSpace() {
+      return Math.max(0, ctrl.realTotalItemsSize - ctrl.containerClientSize);
+    },
+
+    get isScrollVirtualized() {
+      return !!mixState.domContainer && ctrl.virtualTotalItemsSize > ctrl.containerClientSize * 3;
+    },
+
+    get isTranslatedVirtualization() {
+      return ctrl.realVirtualScrollSpaceRatio > 1;
+    },
+
+    get isOrthogonalOverflow() {
+      return ctrl.containerOrthogonalScrollSize > ctrl.containerOrthogonalClientSize;
+    }
   });
 
-  const getRenderClipMixStateObject = () => ({
+  const getState = () => ({
     itemsCount: 0,
     items: null,
     domContainer: null,
@@ -49,80 +122,6 @@
     updateRenderedItems: null,
     setPreservingRealScrollPosition: null
   });
-
-  const defineRenderClipControllerAccessors = (ctrl, mixState) =>
-    Object.defineProperties(ctrl, Object.getOwnPropertyDescriptors({
-      get items() {
-        return mixState.items;
-      },
-
-      get isVertical() {
-        return ctrl.direction === directions.vertical;
-      },
-
-      get clientSizeProp() {
-        return ctrl.isVertical ? 'clientHeight' : 'clientWidth';
-      },
-
-      get scrollPositionProp() {
-        return ctrl.isVertical ? 'scrollTop' : 'scrollLeft';
-      },
-
-      get orthogonalClientSizeProp() {
-        return ctrl.isVertical ? 'clientWidth' : 'clientHeight';
-      },
-
-      get orthogonalScrollSizeProp() {
-        return ctrl.isVertical ? 'scrollWidth' : 'scrollHeight';
-      },
-
-      get containerClientSize() {
-        return mixState.domContainer[ctrl.clientSizeProp];
-      },
-
-      get containerScrollPosition() {
-        // Safari can give out of bounds values for the scroll position
-        return Math.min(
-          Math.max(0, mixState.domContainer[ctrl.scrollPositionProp]),
-          ctrl.virtualScrollSpace);
-      },
-
-      get containerOrthogonalClientSize() {
-        return mixState.domContainer[ctrl.orthogonalClientSizeProp];
-      },
-
-      get containerOrthogonalScrollSize() {
-        return mixState.domContainer[ctrl.orthogonalScrollSizeProp];
-      },
-
-      get virtualTotalItemsSize() {
-        return Math.min(ctrl.realTotalItemsSize, maxAllowedVirtualTotalItemsSize);
-      },
-
-      get realVirtualScrollSpaceRatio() {
-        return ctrl.realScrollSpace / ctrl.virtualScrollSpace;
-      },
-
-      get virtualScrollSpace() {
-        return ctrl.virtualTotalItemsSize - ctrl.containerClientSize;
-      },
-
-      get realScrollSpace() {
-        return ctrl.realTotalItemsSize - ctrl.containerClientSize;
-      },
-
-      get isScrollVirtualized() {
-        return !!mixState.domContainer && ctrl.virtualTotalItemsSize > ctrl.containerClientSize * 3;
-      },
-
-      get isTranslatedVirtualization() {
-        return ctrl.realVirtualScrollSpaceRatio > 1;
-      },
-
-      get isOrthogonalOverflow() {
-        return ctrl.containerOrthogonalScrollSize > ctrl.containerOrthogonalClientSize;
-      }
-    }));
 
   const renderClip1DMixin = mixin((ctrl, mixState) => {
     let currentVirtualScrollPosition = 0;
@@ -397,9 +396,8 @@
     return ctrlMix;
   });
 
-  renderClip1DMixin.getRenderClipControllerObject = getRenderClipControllerObject;
-  renderClip1DMixin.getRenderClipMixStateObject = getRenderClipMixStateObject;
-  renderClip1DMixin.defineRenderClipControllerAccessors = defineRenderClipControllerAccessors;
+  renderClip1DMixin.getContext = getContext;
+  renderClip1DMixin.getState = getState;
 
   const moduleExports = renderClip1DMixin;
 
