@@ -1,3 +1,11 @@
+<a name="1.3.0"></a>
+# [1.3.0](https://github.com/raulsebastianmihaila/crizmas-components/compare/v1.2.0...v1.3.0) (2019-09-07)
+
+### Updates
+- Added support for render-clip for Safari.
+- Refactored render-clip.
+- Updated the version of smart-mix peer dependency.
+
 <a name="1.2.0"></a>
 # [1.2.0](https://github.com/raulsebastianmihaila/crizmas-components/compare/v1.1.0...v1.2.0) (2019-02-16)
 
