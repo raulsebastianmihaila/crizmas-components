@@ -162,6 +162,11 @@
       return searchClosestFromBeforeIndex(position, fromIndex, midIndex);
     };
 
+    ctrlMix.updateLayout = () => {
+      setRealTotalItemsSize();
+      ctrl.refresh();
+    };
+
     return ctrlMix;
   });
 

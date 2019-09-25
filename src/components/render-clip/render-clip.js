@@ -30,6 +30,12 @@
       this.containerRef = React.createRef();
       this.renderedItemsRef = React.createRef();
 
+      this.onScroll = (e) => {
+        if (e.target === this.containerRef.current) {
+          this.props.controller.onScroll();
+        }
+      };
+
       this.syncHeightAfterRender = () => {
         const {renderedItemsCount, orthogonalScrollSizeProp, onRender} = this.props.controller;
 
@@ -115,7 +121,7 @@
     render() {
       const {
         controller: {renderedItemsStartIndex, renderedItemsCount, trimmedStartNegativeSize,
-          virtualTotalItemsSize, isScrollVirtualized, items, getRealItemSize, onScroll},
+          virtualTotalItemsSize, isScrollVirtualized, items, getRealItemSize},
         renderItem
       } = this.props;
 
@@ -128,7 +134,7 @@
             overflow: 'auto',
             whiteSpace: 'nowrap'
           },
-          onScroll
+          onScroll: this.onScroll
         },
         !!renderedItemsCount && createElement('div', {
             ref: this.renderedItemsRef,

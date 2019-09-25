@@ -1,3 +1,9 @@
+<a name="1.4.0"></a>
+# [1.4.0](https://github.com/raulsebastianmihaila/crizmas-components/compare/v1.3.0...v1.4.0) (2019-09-28)
+
+### Updates
+- Add `updateLayout` for render-clip controllers with individual size per item.
+
 <a name="1.3.0"></a>
 # [1.3.0](https://github.com/raulsebastianmihaila/crizmas-components/compare/v1.2.0...v1.3.0) (2019-09-07)
 

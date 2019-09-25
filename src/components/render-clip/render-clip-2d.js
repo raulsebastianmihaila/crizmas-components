@@ -29,6 +29,12 @@
 
       this.containerRef = React.createRef();
 
+      this.onScroll = (e) => {
+        if (e.target === this.containerRef.current) {
+          this.props.controller.onScroll();
+        }
+      };
+
       this.syncHeightAfterRender = () => {
         if (!this.props.controller.verticalRenderClipController.renderedItemsCount
           || !this.props.controller.horizontalRenderClipController.renderedItemsCount) {
@@ -76,7 +82,7 @@
 
     render() {
       const {
-        controller: {verticalRenderClipController, horizontalRenderClipController, onScroll},
+        controller: {verticalRenderClipController, horizontalRenderClipController},
         renderRow,
         renderCell
       } = this.props;
@@ -90,7 +96,7 @@
             overflow: 'auto',
             whiteSpace: 'nowrap'
           },
-          onScroll
+          onScroll: this.onScroll
         },
         !!verticalRenderClipController.renderedItemsCount
           && !!horizontalRenderClipController.renderedItemsCount

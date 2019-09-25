@@ -125,6 +125,7 @@
 
   const renderClip1DMixin = mixin((ctrl, mixState) => {
     let currentVirtualScrollPosition = 0;
+    let realScrollPositionOnUnmount = 0;
     let preserveRealScrollPosition = false;
     let lastPreserveRealScrollVirtualScrollPosition = null;
     let isVirtualScrollPositionSetProgramatically = false;
@@ -153,31 +154,33 @@
     };
 
     ctrlMix.setDomContainer = (domContainer) => {
+      if (!domContainer && mixState.domContainer) {
+        realScrollPositionOnUnmount = mixState.realScrollPosition;
+      }
+
       mixState.domContainer = domContainer;
 
       ctrl.refresh();
-    };
 
-    ctrlMix.setItems = (items) => {
-      mixState.items = items;
-
-      ctrlMix.setItemsCount(mixState.items.length);
-    };
-
-    ctrlMix.setItemsCount = (itemsCount) => {
-      return mixState.setItemsCount(itemsCount);
-    };
-
-    const templateSetItemsCount = (itemsCount, {afterUpdatingItemsCountHook} = {}) => {
-      checkItemsCountConsistency(mixState.items, itemsCount);
-
-      mixState.itemsCount = itemsCount;
-
-      if (afterUpdatingItemsCountHook) {
-        afterUpdatingItemsCountHook();
+      // updating the container scroll position can be done only after the items are rendered
+      // at least once, otherwise the container will not have scroll space
+      if (domContainer) {
+        setTimeout(() => scrollToRealScrollPosition(realScrollPositionOnUnmount));
       }
+    };
 
-      ctrl.refresh();
+    const scrollToRealScrollPosition = (realScrollPosition) => {
+      mixState.lastOperationForSizeSync = mixState.refreshWithCurrentRealScrollPosition;
+
+      refreshWithRealScrollPosition(realScrollPosition);
+    };
+
+    const refreshWithRealScrollPosition = (realScrollPosition_) => {
+      mixState.realScrollPosition = Math.min(
+        Math.max(0, realScrollPosition_),
+        ctrl.realScrollSpace);
+
+      mixState.refreshWithCurrentRealScrollPosition();
     };
 
     ctrlMix.refreshWithCurrentRealScrollPosition = () => {
@@ -225,6 +228,28 @@
       // it's better to always update the items even if the scroll position changes
       // because if the items changed we don't want to wait for the scroll event
       mixState.updateRenderedItems();
+    };
+
+    ctrlMix.setItems = (items) => {
+      mixState.items = items;
+
+      ctrlMix.setItemsCount(mixState.items.length);
+    };
+
+    ctrlMix.setItemsCount = (itemsCount) => {
+      return mixState.setItemsCount(itemsCount);
+    };
+
+    const templateSetItemsCount = (itemsCount, {afterUpdatingItemsCountHook} = {}) => {
+      checkItemsCountConsistency(mixState.items, itemsCount);
+
+      mixState.itemsCount = itemsCount;
+
+      if (afterUpdatingItemsCountHook) {
+        afterUpdatingItemsCountHook();
+      }
+
+      ctrl.refresh();
     };
 
     const templateUpdateNonVirtualized = ({afterUpdatingRenderingInfoHook} = {}) => {
@@ -325,14 +350,6 @@
       }
 
       mixState.updateRenderedItems();
-    };
-
-    const refreshWithRealScrollPosition = (realScrollPosition_) => {
-      mixState.realScrollPosition = Math.min(
-        Math.max(0, realScrollPosition_),
-        ctrl.realScrollSpace);
-
-      mixState.refreshWithCurrentRealScrollPosition();
     };
 
     ctrlMix.scrollIntoView = (index, {ifNeeded, alignEnd, fit} = {}) => {

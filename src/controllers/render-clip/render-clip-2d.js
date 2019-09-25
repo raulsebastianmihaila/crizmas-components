@@ -50,6 +50,16 @@
       ctrl.horizontalRenderClipController.onScroll();
     };
 
+    ctrl.updateLayout = () => {
+      if (ctrl.verticalRenderClipController.updateLayout) {
+        ctrl.verticalRenderClipController.updateLayout();
+      }
+
+      if (ctrl.horizontalRenderClipController.updateLayout) {
+        ctrl.horizontalRenderClipController.updateLayout();
+      }
+    };
+
     return ctrl;
   });
 

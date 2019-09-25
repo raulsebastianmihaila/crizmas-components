@@ -67,6 +67,9 @@
         mixMethods: [
           'init',
           'getGetRealItemSizeDefinition'
+        ],
+        contextMethods: [
+          'updateLayout'
         ]
       });
 
