@@ -1,3 +1,9 @@
+<a name="1.4.1"></a>
+# [1.4.1](https://github.com/raulsebastianmihaila/crizmas-components/compare/v1.4.0...v1.4.1) (2019-09-28)
+
+### Fixes
+- Fix scrolls synchronization for `scrollTo` like operations.
+
 <a name="1.4.0"></a>
 # [1.4.0](https://github.com/raulsebastianmihaila/crizmas-components/compare/v1.3.0...v1.4.0) (2019-09-28)
 

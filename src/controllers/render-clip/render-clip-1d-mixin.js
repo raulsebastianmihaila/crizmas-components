@@ -170,7 +170,7 @@
     };
 
     const scrollToRealScrollPosition = (realScrollPosition) => {
-      mixState.lastOperationForSizeSync = mixState.refreshWithCurrentRealScrollPosition;
+      mixState.lastOperationForSizeSync = scrollToRealScrollPosition.bind(null, realScrollPosition);
 
       refreshWithRealScrollPosition(realScrollPosition);
     };
@@ -405,7 +405,7 @@
         return;
       }
 
-      mixState.lastOperationForSizeSync = mixState.refreshWithCurrentRealScrollPosition;
+      mixState.lastOperationForSizeSync = ctrlMix.scrollTo.bind(null, scrollPosition);
 
       refreshWithRealScrollPosition(scrollPosition * ctrl.realVirtualScrollSpaceRatio);
     };
