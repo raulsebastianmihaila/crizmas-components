@@ -114,8 +114,6 @@
     realScrollPosition: 0,
     setItemsCount: null,
     templateSetItemsCount: null,
-    lastOperationForSizeSync: null,
-    prevIsOrthogonalOverflow: false,
     getRealItemPosition: null,
     updateNonVirtualized: null,
     templateUpdateNonVirtualized: null,
@@ -124,11 +122,14 @@
   });
 
   const renderClip1DMixin = mixin((ctrl, mixState) => {
-    let currentVirtualScrollPosition = 0;
     let realScrollPositionOnUnmount = 0;
+    let mustResetScrollPositionAfterMount = false;
     let preserveRealScrollPosition = false;
     let lastPreserveRealScrollVirtualScrollPosition = null;
     let isVirtualScrollPositionSetProgramatically = false;
+    let currentVirtualScrollPosition = 0;
+    let lastOperationForSizeSync = null;
+    let prevIsOrthogonalOverflow = false;
     const ctrlMix = {};
 
     ctrlMix.init = ({
@@ -154,7 +155,9 @@
     };
 
     ctrlMix.setDomContainer = (domContainer) => {
-      if (!domContainer && mixState.domContainer) {
+      const hadDomContainer = mixState.domContainer;
+
+      if (!domContainer && hadDomContainer) {
         realScrollPositionOnUnmount = mixState.realScrollPosition;
       }
 
@@ -164,23 +167,31 @@
 
       // updating the container scroll position can be done only after the items are rendered
       // at least once, otherwise the container will not have scroll space
-      if (domContainer) {
-        setTimeout(() => scrollToRealScrollPosition(realScrollPositionOnUnmount));
+      if (domContainer && !hadDomContainer) {
+        mustResetScrollPositionAfterMount = true;
       }
     };
 
-    const scrollToRealScrollPosition = (realScrollPosition) => {
-      mixState.lastOperationForSizeSync = scrollToRealScrollPosition.bind(null, realScrollPosition);
+    ctrlMix.setItems = (items) => {
+      mixState.items = items;
 
-      refreshWithRealScrollPosition(realScrollPosition);
+      ctrlMix.setItemsCount(mixState.items.length);
     };
 
-    const refreshWithRealScrollPosition = (realScrollPosition_) => {
-      mixState.realScrollPosition = Math.min(
-        Math.max(0, realScrollPosition_),
-        ctrl.realScrollSpace);
+    ctrlMix.setItemsCount = (itemsCount) => {
+      return mixState.setItemsCount(itemsCount);
+    };
 
-      mixState.refreshWithCurrentRealScrollPosition();
+    const templateSetItemsCount = (itemsCount, {afterUpdatingItemsCountHook} = {}) => {
+      checkItemsCountConsistency(mixState.items, itemsCount);
+
+      mixState.itemsCount = itemsCount;
+
+      if (afterUpdatingItemsCountHook) {
+        afterUpdatingItemsCountHook();
+      }
+
+      ctrl.refresh();
     };
 
     ctrlMix.refreshWithCurrentRealScrollPosition = () => {
@@ -230,28 +241,6 @@
       mixState.updateRenderedItems();
     };
 
-    ctrlMix.setItems = (items) => {
-      mixState.items = items;
-
-      ctrlMix.setItemsCount(mixState.items.length);
-    };
-
-    ctrlMix.setItemsCount = (itemsCount) => {
-      return mixState.setItemsCount(itemsCount);
-    };
-
-    const templateSetItemsCount = (itemsCount, {afterUpdatingItemsCountHook} = {}) => {
-      checkItemsCountConsistency(mixState.items, itemsCount);
-
-      mixState.itemsCount = itemsCount;
-
-      if (afterUpdatingItemsCountHook) {
-        afterUpdatingItemsCountHook();
-      }
-
-      ctrl.refresh();
-    };
-
     const templateUpdateNonVirtualized = ({afterUpdatingRenderingInfoHook} = {}) => {
       ctrl.renderedItemsStartIndex = 0;
       ctrl.renderedItemsCount = mixState.domContainer ? mixState.itemsCount : 0;
@@ -290,20 +279,28 @@
         throw new Error('DOM container missing');
       }
 
-      const operationForSizeSync = mixState.lastOperationForSizeSync
+      const operationForSizeSync = lastOperationForSizeSync
         || mixState.refreshWithCurrentRealScrollPosition;
       const syncResolutionDefaults = {
         mustReapplyLastOperationForSizeSync: false,
         lastOperationForSizeSync: operationForSizeSync
       };
 
-      if (!isVirtualScrollPositionSetProgramatically) {
-        const wasOrhotogonalOverflow = mixState.prevIsOrthogonalOverflow;
+      if (mustResetScrollPositionAfterMount) {
+        mustResetScrollPositionAfterMount = false;
 
-        mixState.prevIsOrthogonalOverflow = ctrl.isOrthogonalOverflow;
+        scrollToRealScrollPosition(realScrollPositionOnUnmount);
+
+        return syncResolutionDefaults;
+      }
+
+      if (!isVirtualScrollPositionSetProgramatically) {
+        const wasOrhotogonalOverflow = prevIsOrthogonalOverflow;
+
+        prevIsOrthogonalOverflow = ctrl.isOrthogonalOverflow;
 
         if (ctrl.isVirtualizationEmptySpace
-          || !wasOrhotogonalOverflow && mixState.prevIsOrthogonalOverflow) {
+          || !wasOrhotogonalOverflow && prevIsOrthogonalOverflow) {
           return {
             ...syncResolutionDefaults,
             mustReapplyLastOperationForSizeSync: true
@@ -320,11 +317,25 @@
       }
 
       if (!isVirtualScrollPositionSetProgramatically) {
-        mixState.lastOperationForSizeSync = null;
+        lastOperationForSizeSync = null;
         preserveRealScrollPosition = false;
       }
 
       return syncResolutionDefaults;
+    };
+
+    const scrollToRealScrollPosition = (realScrollPosition) => {
+      lastOperationForSizeSync = scrollToRealScrollPosition.bind(null, realScrollPosition);
+
+      refreshWithRealScrollPosition(realScrollPosition);
+    };
+
+    const refreshWithRealScrollPosition = (realScrollPosition_) => {
+      mixState.realScrollPosition = Math.min(
+        Math.max(0, realScrollPosition_),
+        ctrl.realScrollSpace);
+
+      mixState.refreshWithCurrentRealScrollPosition();
     };
 
     ctrlMix.onScroll = () => {
@@ -357,7 +368,7 @@
         return;
       }
 
-      mixState.lastOperationForSizeSync = ctrlMix.scrollIntoView.bind(
+      lastOperationForSizeSync = ctrlMix.scrollIntoView.bind(
         null,
         index,
         {ifNeeded, alignEnd, fit});
@@ -405,7 +416,7 @@
         return;
       }
 
-      mixState.lastOperationForSizeSync = ctrlMix.scrollTo.bind(null, scrollPosition);
+      lastOperationForSizeSync = ctrlMix.scrollTo.bind(null, scrollPosition);
 
       refreshWithRealScrollPosition(scrollPosition * ctrl.realVirtualScrollSpaceRatio);
     };

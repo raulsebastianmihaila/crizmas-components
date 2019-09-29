@@ -1,3 +1,9 @@
+<a name="1.4.2"></a>
+# [1.4.2](https://github.com/raulsebastianmihaila/crizmas-components/compare/v1.4.1...v1.4.2) (2019-09-29)
+
+### Updates
+- Refactoring, including removing `setTimeout`.
+
 <a name="1.4.1"></a>
 # [1.4.1](https://github.com/raulsebastianmihaila/crizmas-components/compare/v1.4.0...v1.4.1) (2019-09-28)
 
