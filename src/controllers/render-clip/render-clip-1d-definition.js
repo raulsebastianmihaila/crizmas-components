@@ -13,8 +13,8 @@
     Mvc = require('crizmas-mvc');
     utils = require('crizmas-utils');
     renderClip1DMixin = require('./render-clip-1d-mixin');
-    renderClipSameSize1DMixin = require('./render-clip-same-size-1d-mixin.js');
-    renderClipIndividualSize1DMixin = require('./render-clip-individual-size-1d-mixin.js');
+    renderClipSameSize1DMixin = require('./render-clip-same-size-1d-mixin');
+    renderClipIndividualSize1DMixin = require('./render-clip-individual-size-1d-mixin');
   } else {
     ({Mvc, utils, renderClip1DMixin, renderClipSameSize1DMixin,
       renderClipIndividualSize1DMixin} = window.crizmas);

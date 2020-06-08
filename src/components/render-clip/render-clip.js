@@ -122,7 +122,8 @@
       const {
         controller: {renderedItemsStartIndex, renderedItemsCount, trimmedStartNegativeSize,
           virtualTotalItemsSize, isScrollVirtualized, items, getRealItemSize},
-        renderItem
+        renderItem,
+        stretch
       } = this.props;
 
       return createElement('div', {
@@ -142,7 +143,7 @@
               ? {
                 position: stickyValue,
                 [this.paddingPosition]: 0,
-                [this.orthogonalSizeProp]: fitContentValue,
+                [this.orthogonalSizeProp]: stretch ? '100%' : fitContentValue,
                 [this.sizeProp]: '100%',
                 [this.overflowProp]: 'hidden'
               }
@@ -175,7 +176,8 @@
 
   RenderClip.propTypes = {
     controller: PropTypes.object.isRequired,
-    renderItem: PropTypes.func.isRequired
+    renderItem: PropTypes.func.isRequired,
+    stretch: PropTypes.bool
   };
 
   const moduleExports = RenderClip;

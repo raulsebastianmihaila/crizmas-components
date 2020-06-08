@@ -295,12 +295,12 @@
       }
 
       if (!isVirtualScrollPositionSetProgramatically) {
-        const wasOrhotogonalOverflow = prevIsOrthogonalOverflow;
+        const wasOrthogonalOverflow = prevIsOrthogonalOverflow;
 
         prevIsOrthogonalOverflow = ctrl.isOrthogonalOverflow;
 
         if (ctrl.isVirtualizationEmptySpace
-          || !wasOrhotogonalOverflow && prevIsOrthogonalOverflow) {
+          || !wasOrthogonalOverflow && prevIsOrthogonalOverflow) {
           return {
             ...syncResolutionDefaults,
             mustReapplyLastOperationForSizeSync: true
