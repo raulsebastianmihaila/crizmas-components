@@ -1,3 +1,10 @@
+<a name="1.5.0"></a>
+# [1.5.0](https://github.com/raulsebastianmihaila/crizmas-components/compare/v1.4.2...v1.5.0) (2020-06-08)
+
+### Updates
+- Add `stretch` prop to `RenderClip`.
+- Small refactoring.
+
 <a name="1.4.2"></a>
 # [1.4.2](https://github.com/raulsebastianmihaila/crizmas-components/compare/v1.4.1...v1.4.2) (2019-09-29)
 
