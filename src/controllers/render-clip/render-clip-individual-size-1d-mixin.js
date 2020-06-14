@@ -46,8 +46,12 @@
     };
 
     ctrlMix.getGetRealItemSizeDefinition = (itemHeight, itemWidth) => ctrl.isVertical
-      ? (index) => itemHeight(index, mixState.items && mixState.items[index])
-      : (index) => itemWidth(index, mixState.items && mixState.items[index]);
+      ? mixState.items
+        ? (index) => itemHeight(index, mixState.items[index])
+        : (index) => itemHeight(index)
+      : mixState.items
+        ? (index) => itemWidth(index, mixState.items[index])
+        : (index) => itemWidth(index);
 
     const setItemsCount = (itemsCount) => mixState.templateSetItemsCount(itemsCount, {
       afterUpdatingItemsCountHook: () => {
@@ -58,7 +62,7 @@
     const getRealItemPosition = (index) => itemsPositions[index];
 
     const setRealTotalItemsSize = () => {
-      itemsPositions = Array(mixState.itemsCount + 1);
+      itemsPositions = new Float64Array(mixState.itemsCount + 1);
       ctrl.realTotalItemsSize = getRealTotalItemsSizeAndPositions();
     };
 

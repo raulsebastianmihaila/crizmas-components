@@ -1,3 +1,9 @@
+<a name="1.5.1"></a>
+# [1.5.1](https://github.com/raulsebastianmihaila/crizmas-components/compare/v1.5.0...v1.5.1) (2020-06-14)
+
+### Updates
+- Performance improvement for individual size render-clip.
+
 <a name="1.5.0"></a>
 # [1.5.0](https://github.com/raulsebastianmihaila/crizmas-components/compare/v1.4.2...v1.5.0) (2020-06-08)
 
