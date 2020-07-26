@@ -111,7 +111,8 @@
     }
 
     componentDidUpdate(prevProps) {
-      if (this.props.debounce !== prevProps.debounce) {
+      if (this.props.debounce !== prevProps.debounce
+        || this.props.onChange !== prevProps.onChange) {
         this.setOnChangeMethod();
       }
 
