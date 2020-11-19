@@ -105,15 +105,23 @@
         oldValue: this.props.value
       };
 
+      this.onChange = null;
+      this.onBlur = null;
       this.initOnChange = this.initOnChange.bind(this);
 
       this.setOnChangeMethod();
+      this.setOnBlurMethod();
     }
 
     componentDidUpdate(prevProps) {
-      if (this.props.debounce !== prevProps.debounce
-        || this.props.onChange !== prevProps.onChange) {
-        this.setOnChangeMethod();
+      if (this.props.debounce !== prevProps.debounce) {
+        if (this.props.onChange !== prevProps.onChange) {
+          this.setOnChangeMethod();
+        }
+
+        if (this.props.onBlur !== prevProps.onBlur) {
+          this.setOnBlurMethod();
+        }
       }
 
       // we must ignore the same value when we have an intermediary string representation
@@ -168,21 +176,37 @@
     }
 
     setOnChangeMethod() {
-      const inputDebounce = typeof this.props.debounce === 'number'
-        ? this.props.debounce
-        : isBoolHtmlInputType(this.props.type)
-          ? defaultBoolDebounce
-          : typeof this.context.inputDebounce === 'number'
-            ? this.context.inputDebounce
-            : defaultDebounce;
+      const inputDebounce = this.getInputDebounce();
 
       this.onChange = inputDebounce === 0
         ? this.props.onChange
         : debounce(this.props.onChange, inputDebounce);
     }
 
+    getInputDebounce() {
+      return typeof this.props.debounce === 'number'
+        ? this.props.debounce
+        : isBoolHtmlInputType(this.props.type)
+          ? defaultBoolDebounce
+          : typeof this.context.inputDebounce === 'number'
+            ? this.context.inputDebounce
+            : defaultDebounce;
+    }
+
+    setOnBlurMethod() {
+      if (!this.props.onBlur) {
+        return void (this.onBlur = null);
+      }
+
+      const inputDebounce = this.getInputDebounce();
+
+      this.onBlur = inputDebounce === 0
+        ? this.props.onBlur
+        : debounce(this.props.onBlur, inputDebounce);
+    }
+
     render() {
-      const {errors, type, required, placeholder, className, onBlur, readOnly,
+      const {errors, type, required, placeholder, className, readOnly,
         disabled, autoFocus, inputClassName, inputProps} = this.props;
       const value = isVal(this.state.value)
         ? this.state.value
@@ -204,7 +228,7 @@
               : 'text',
             placeholder,
             onChange: this.initOnChange,
-            onBlur,
+            onBlur: this.onBlur,
             readOnly,
             disabled,
             autoFocus,

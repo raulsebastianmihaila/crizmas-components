@@ -1,3 +1,9 @@
+<a name="1.5.3"></a>
+# [1.5.3](https://github.com/raulsebastianmihaila/crizmas-components/compare/v1.5.2...v1.5.3) (2020-11-30)
+
+### Fixes
+- Fix `onBlur` by debouncing it the same as `onChange` is debounced to prevent validating with the blur event too early when `onChange` is debounced.
+
 <a name="1.5.2"></a>
 # [1.5.2](https://github.com/raulsebastianmihaila/crizmas-components/compare/v1.5.1...v1.5.2) (2020-07-26)
 
