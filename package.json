@@ -1,6 +1,6 @@
 {
   "name": "crizmas-components",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "Components package used in conjunction with the crizmas-mvc framework.",
   "license": "MIT",
   "private": true,
