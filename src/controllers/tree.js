@@ -1,127 +1,106 @@
-(() => {
-  'use strict';
+import {controller} from 'crizmas-mvc';
 
-  const isModule = typeof module === 'object' && typeof module.exports === 'object';
+import RenderClipController from './render-clip/render-clip.js';
 
-  let Mvc;
-  let RenderClipController;
+export default controller(function TreeController({nodes: nodes_, itemHeight}) {
+  // the nodes are a tree of objects with optional children and isExpanded properties
+  // and any other possible properties
 
-  if (isModule) {
-    Mvc = require('crizmas-mvc');
-    RenderClipController = require('./render-clip/render-clip');
-  } else {
-    ({Mvc, RenderClipController} = window.crizmas);
-  }
+  let nodes = nodes_;
+  let tree;
+  let treeArray;
+  const ctrl = {
+    renderClipController: new RenderClipController({itemHeight}),
 
-  const TreeController = Mvc.controller(function TreeController({nodes: nodes_, itemHeight}) {
-    // the nodes are a tree of objects with optional children and isExpanded properties
-    // and any other possible properties
-
-    let nodes = nodes_;
-    let tree;
-    let treeArray;
-    const ctrl = {
-      renderClipController: new RenderClipController({itemHeight}),
-
-      get treeArray() {
-        return treeArray;
-      }
-    };
-
-    const init = () => {
-      initTreeItems();
-      initTreeArray();
-    };
-
-    const initTreeItems = () => {
-      tree = getTreeNodes(nodes, 0);
-    };
-
-    const getTreeNodes = (nodes, level) => {
-      const childrenLevel = level + 1;
-
-      return nodes.map((node) => ({
-        data: node,
-        level,
-        isExpanded: !!node.children && !!node.isExpanded,
-        children: node.children
-          ? getTreeNodes(node.children, childrenLevel)
-          : null
-      }));
-    };
-
-    const initTreeArray = () => {
-      treeArray = getTreeArray(tree);
-
-      ctrl.renderClipController.setItemsCount(treeArray.length);
-    };
-
-    const getTreeArray = (treeNodes, treeArray = []) => {
-      treeNodes.forEach((treeNode) => {
-        treeArray.push(treeNode);
-
-        if (treeNode.isExpanded) {
-          getTreeArray(treeNode.children, treeArray);
-        }
-      });
-
+    get treeArray() {
       return treeArray;
-    };
+    }
+  };
 
-    ctrl.setNodes = (nodes_) => {
-      nodes = nodes_;
+  const init = () => {
+    initTreeItems();
+    initTreeArray();
+  };
 
-      init();
-    };
+  const initTreeItems = () => {
+    tree = getTreeNodes(nodes, 0);
+  };
 
-    ctrl.refresh = () => {
-      ctrl.renderClipController.refresh();
-    };
+  const getTreeNodes = (nodes, level) => {
+    const childrenLevel = level + 1;
 
-    ctrl.toggleExpand = (treeNode) => {
-      const treeNodeIndex = treeArray.indexOf(treeNode);
+    return nodes.map((node) => ({
+      data: node,
+      level,
+      isExpanded: !!node.children && !!node.isExpanded,
+      children: node.children
+        ? getTreeNodes(node.children, childrenLevel)
+        : null
+    }));
+  };
 
-      treeNode.isExpanded = !treeNode.isExpanded;
+  const initTreeArray = () => {
+    treeArray = getTreeArray(tree);
+
+    ctrl.renderClipController.setItemsCount(treeArray.length);
+  };
+
+  const getTreeArray = (treeNodes, treeArray = []) => {
+    treeNodes.forEach((treeNode) => {
+      treeArray.push(treeNode);
 
       if (treeNode.isExpanded) {
-        const nodeSubtreeArray = getTreeArray(treeNode.children);
-        const prevArray = treeArray.slice(0, treeNodeIndex + 1);
-        const afterArray = treeArray.slice(treeNodeIndex + 1);
-
-        treeArray = [
-          ...prevArray,
-          ...nodeSubtreeArray,
-          ...afterArray
-        ];
-      } else {
-        const nodeSubtreeLength = getSubTreeNodeLength(treeNode);
-
-        treeArray.splice(treeNodeIndex + 1, nodeSubtreeLength);
+        getTreeArray(treeNode.children, treeArray);
       }
+    });
 
-      ctrl.renderClipController.setItemsCount(treeArray.length);
-    };
+    return treeArray;
+  };
 
-    const getSubTreeNodeLength = (treeNode) => {
-      return treeNode.children
-        ? treeNode.children.reduce(
-          (sum, childTreeNode) => sum + 1
-            + (childTreeNode.isExpanded ? getSubTreeNodeLength(childTreeNode) : 0),
-          0)
-        : 0;
-    };
+  ctrl.setNodes = (nodes_) => {
+    nodes = nodes_;
 
     init();
+  };
 
-    return ctrl;
-  });
+  ctrl.refresh = () => {
+    ctrl.renderClipController.refresh();
+  };
 
-  const moduleExports = TreeController;
+  ctrl.toggleExpand = (treeNode) => {
+    const treeNodeIndex = treeArray.indexOf(treeNode);
 
-  if (isModule) {
-    module.exports = moduleExports;
-  } else {
-    window.crizmas = window.crizmas || {};
-    window.crizmas.TreeController = moduleExports;
-  }
-})();
+    treeNode.isExpanded = !treeNode.isExpanded;
+
+    if (treeNode.isExpanded) {
+      const nodeSubtreeArray = getTreeArray(treeNode.children);
+      const prevArray = treeArray.slice(0, treeNodeIndex + 1);
+      const afterArray = treeArray.slice(treeNodeIndex + 1);
+
+      treeArray = [
+        ...prevArray,
+        ...nodeSubtreeArray,
+        ...afterArray
+      ];
+    } else {
+      const nodeSubtreeLength = getSubTreeNodeLength(treeNode);
+
+      treeArray.splice(treeNodeIndex + 1, nodeSubtreeLength);
+    }
+
+    ctrl.renderClipController.setItemsCount(treeArray.length);
+  };
+
+  const getSubTreeNodeLength = (treeNode) => {
+    return treeNode.children
+      ? treeNode.children.reduce(
+        (sum, childTreeNode) => sum + 1
+          + (childTreeNode.isExpanded ? getSubTreeNodeLength(childTreeNode) : 0),
+        0)
+      : 0;
+  };
+
+  init();
+
+  return ctrl;
+});

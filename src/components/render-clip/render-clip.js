@@ -1,167 +1,160 @@
-(() => {
-  'use strict';
+import React from 'react';
+import propTypes from 'prop-types';
 
-  const isModule = typeof module === 'object' && typeof module.exports === 'object';
+import {getFitContentValue, getStickyValue} from '../../utils.js';
 
-  let React;
-  let PropTypes;
-  let componentUtils;
+const {createElement} = React;
 
-  if (isModule) {
-    React = require('react');
-    PropTypes = require('prop-types');
-    componentUtils = require('../../utils');
-  } else {
-    React = window.React;
-    PropTypes = window.PropTypes;
-    ({componentUtils} = window.crizmas);
-  }
+const fitContentValue = getFitContentValue();
+const stickyValue = getStickyValue();
 
-  const {Component, createElement} = React;
-  const {getFitContentValue, getStickyValue} = componentUtils;
+export default class RenderClip extends React.Component {
+  constructor() {
+    super();
 
-  const fitContentValue = getFitContentValue();
-  const stickyValue = getStickyValue();
+    this.containerRef = React.createRef();
+    this.renderedItemsRef = React.createRef();
 
-  class RenderClip extends Component {
-    constructor() {
-      super();
+    this.onScroll = (e) => {
+      if (e.target === this.containerRef.current) {
+        this.props.controller.onScroll();
+      }
+    };
 
-      this.containerRef = React.createRef();
-      this.renderedItemsRef = React.createRef();
+    this.syncHeightAfterRender = () => {
+      const {renderedItemsCount, orthogonalScrollSizeProp, onRender} = this.props.controller;
 
-      this.onScroll = (e) => {
-        if (e.target === this.containerRef.current) {
-          this.props.controller.onScroll();
-        }
-      };
-
-      this.syncHeightAfterRender = () => {
-        const {renderedItemsCount, orthogonalScrollSizeProp, onRender} = this.props.controller;
-
-        if (!renderedItemsCount) {
-          return;
-        }
-
-        const {mustResetOrthogonalMinSize, mustReapplyLastOperationForSizeSync,
-          mustReapplyLastOperationForSizeSyncIfChangesMade,
-          lastOperationForSizeSync} = onRender();
-        const renderedItemsStyle = this.renderedItemsRef.current.style;
-        let changesMade = false;
-
-        if (mustResetOrthogonalMinSize) {
-          const currentOrthogonalMinSize = renderedItemsStyle[this.orthogonalMinSizeProp];
-
-          changesMade = currentOrthogonalMinSize !== 'unset';
-
-          // the styles in jsx don't overwrite the styles set here
-          renderedItemsStyle[this.orthogonalMinSizeProp] = 'unset';
-        } else if (this.props.controller.isOrthogonalOverflow) {
-          renderedItemsStyle[this.orthogonalMinSizeProp] =
-            `${this.renderedItemsRef.current[orthogonalScrollSizeProp]}px`;
-        }
-
-        if (mustReapplyLastOperationForSizeSync
-          || changesMade && mustReapplyLastOperationForSizeSyncIfChangesMade) {
-          lastOperationForSizeSync();
-        }
-      };
-
-      this.onWindowResize = () => {
-        this.props.controller.refresh();
-      };
-    }
-
-    get sizeProp() {
-      return this.props.controller.isVertical ? 'height' : 'width';
-    }
-
-    get orthogonalSizeProp() {
-      return this.props.controller.isVertical ? 'width' : 'height';
-    }
-
-    get orthogonalMinSizeProp() {
-      return this.props.controller.isVertical ? 'minWidth' : 'minHeight';
-    }
-
-    get paddingPosition() {
-      return this.props.controller.isVertical ? 'top' : 'left';
-    }
-
-    get overflowProp() {
-      return this.props.controller.isVertical ? 'overflowY' : 'overflowX';
-    }
-
-    get translateProp() {
-      return this.props.controller.isVertical ? 'translateY' : 'translateX';
-    }
-
-    get itemSizeProp() {
-      return this.props.controller.isVertical ? 'itemHeight' : 'itemWidth';
-    }
-
-    componentDidMount() {
-      this.props.controller.setDomContainer(this.containerRef.current);
-      window.addEventListener('resize', this.onWindowResize);
-    }
-
-    componentDidUpdate(prevProps) {
-      if (this.props.controller !== prevProps.controller) {
-        this.props.controller.setDomContainer(this.containerRef.current);
+      if (!renderedItemsCount) {
+        return;
       }
 
-      this.syncHeightAfterRender();
+      const {mustResetOrthogonalMinSize, mustReapplyLastOperationForSizeSync,
+        mustReapplyLastOperationForSizeSyncIfChangesMade,
+        lastOperationForSizeSync} = onRender();
+      const renderedItemsStyle = this.renderedItemsRef.current.style;
+      let changesMade = false;
+
+      if (mustResetOrthogonalMinSize) {
+        const currentOrthogonalMinSize = renderedItemsStyle[this.orthogonalMinSizeProp];
+
+        changesMade = currentOrthogonalMinSize !== 'unset';
+
+        // the styles in jsx don't overwrite the styles set here
+        renderedItemsStyle[this.orthogonalMinSizeProp] = 'unset';
+      } else if (this.props.controller.isOrthogonalOverflow) {
+        renderedItemsStyle[this.orthogonalMinSizeProp] =
+          `${this.renderedItemsRef.current[orthogonalScrollSizeProp]}px`;
+      }
+
+      if (mustReapplyLastOperationForSizeSync
+        || changesMade && mustReapplyLastOperationForSizeSyncIfChangesMade) {
+        lastOperationForSizeSync();
+      }
+    };
+
+    this.onWindowResize = () => {
+      this.props.controller.refresh();
+    };
+  }
+
+  get sizeProp() {
+    return this.props.controller.isVertical ? 'height' : 'width';
+  }
+
+  get orthogonalSizeProp() {
+    return this.props.controller.isVertical ? 'width' : 'height';
+  }
+
+  get orthogonalMinSizeProp() {
+    return this.props.controller.isVertical ? 'minWidth' : 'minHeight';
+  }
+
+  get paddingPosition() {
+    return this.props.controller.isVertical ? 'top' : 'left';
+  }
+
+  get overflowProp() {
+    return this.props.controller.isVertical ? 'overflowY' : 'overflowX';
+  }
+
+  get translateProp() {
+    return this.props.controller.isVertical ? 'translateY' : 'translateX';
+  }
+
+  get itemSizeProp() {
+    return this.props.controller.isVertical ? 'itemHeight' : 'itemWidth';
+  }
+
+  componentDidMount() {
+    this.props.controller.setDomContainer(this.containerRef.current);
+    window.addEventListener('resize', this.onWindowResize);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.controller !== prevProps.controller) {
+      this.props.controller.setDomContainer(this.containerRef.current);
     }
 
-    componentWillUnmount() {
-      this.props.controller.setDomContainer(null);
-      window.removeEventListener('resize', this.onWindowResize);
-    }
+    this.syncHeightAfterRender();
+  }
 
-    render() {
-      const {
-        controller: {renderedItemsStartIndex, renderedItemsCount, trimmedStartNegativeSize,
-          virtualTotalItemsSize, isScrollVirtualized, items, getRealItemSize},
-        renderItem,
-        stretch
-      } = this.props;
+  componentWillUnmount() {
+    this.props.controller.setDomContainer(null);
+    window.removeEventListener('resize', this.onWindowResize);
+  }
 
-      return createElement('div', {
-          ref: this.containerRef,
-          style: {
-            position: 'relative',
-            width: '100%',
-            height: '100%',
-            overflow: 'auto',
-            whiteSpace: 'nowrap'
-          },
-          onScroll: this.onScroll
+  render() {
+    const {
+      controller: {renderedItemsStartIndex, renderedItemsCount, trimmedStartNegativeSize,
+        virtualTotalItemsSize, isScrollVirtualized, items, getRealItemSize},
+      renderItem,
+      stretch
+    } = this.props;
+
+    return createElement(
+      'div',
+      {
+        ref: this.containerRef,
+        style: {
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+          overflow: 'auto',
+          whiteSpace: 'nowrap'
         },
-        !!renderedItemsCount && createElement('div', {
-            ref: this.renderedItemsRef,
-            style: isScrollVirtualized
-              ? {
-                position: stickyValue,
-                [this.paddingPosition]: 0,
-                [this.orthogonalSizeProp]: stretch ? '100%' : fitContentValue,
-                [this.sizeProp]: '100%',
-                [this.overflowProp]: 'hidden'
-              }
-              : null
+        onScroll: this.onScroll
+      },
+      !!renderedItemsCount && createElement(
+        'div',
+        {
+          ref: this.renderedItemsRef,
+          style: isScrollVirtualized
+            ? {
+              position: stickyValue,
+              [this.paddingPosition]: 0,
+              [this.orthogonalSizeProp]: stretch ? '100%' : fitContentValue,
+              [this.sizeProp]: '100%',
+              [this.overflowProp]: 'hidden'
+            }
+            : null
+        },
+        createElement(
+          'div',
+          {
+            style: {transform: `${this.translateProp}(${trimmedStartNegativeSize}px)`}
           },
-          createElement('div', {
-              style: {transform: `${this.translateProp}(${trimmedStartNegativeSize}px)`}
-            },
-            Array.from({length: renderedItemsCount}, (v, index) => {
-              const itemIndex = renderedItemsStartIndex + index;
+          Array.from({length: renderedItemsCount}, (v, index) => {
+            const itemIndex = renderedItemsStartIndex + index;
 
-              return renderItem({
-                index: itemIndex,
-                [this.itemSizeProp]: getRealItemSize(itemIndex),
-                ...items && {item: items[itemIndex]}
-              });
-            }))),
-        !!renderedItemsCount && isScrollVirtualized && createElement('div', {
+            return renderItem({
+              index: itemIndex,
+              [this.itemSizeProp]: getRealItemSize(itemIndex),
+              ...items && {item: items[itemIndex]}
+            });
+          }))),
+      !!renderedItemsCount && isScrollVirtualized && createElement(
+        'div',
+        {
           style: {
             position: 'absolute',
             left: 0,
@@ -171,20 +164,11 @@
             [this.sizeProp]: virtualTotalItemsSize
           }
         }));
-    }
   }
+}
 
-  RenderClip.propTypes = {
-    controller: PropTypes.object.isRequired,
-    renderItem: PropTypes.func.isRequired,
-    stretch: PropTypes.bool
-  };
-
-  const moduleExports = RenderClip;
-
-  if (isModule) {
-    module.exports = moduleExports;
-  } else {
-    window.crizmas.RenderClip = moduleExports;
-  }
-})();
+RenderClip.propTypes = {
+  controller: propTypes.object.isRequired,
+  renderItem: propTypes.func.isRequired,
+  stretch: propTypes.bool
+};

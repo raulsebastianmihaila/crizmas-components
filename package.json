@@ -8,12 +8,12 @@
     "name": "Raul-Sebastian Mihăilă",
     "email": "raul.mihaila@gmail.com"
   },
+  "type": "module",
   "peerDependencies": {
-    "crizmas-mvc": "^1.0.3",
-    "crizmas-utils": "^1.0.3",
+    "crizmas-mvc": "^2.0.0",
     "prop-types": "^15.6.2",
     "react": "^16.5.2",
-    "smart-mix": "^1.1.0"
+    "smart-mix": "^2.0.0"
   },
   "homepage": "https://raulsebastianmihaila.github.io/crizmas-mvc-docs",
   "repository": {

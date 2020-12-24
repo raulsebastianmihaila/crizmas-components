@@ -1,89 +1,70 @@
-(() => {
-  'use strict';
+import mixin from 'smart-mix';
 
-  const isModule = typeof module === 'object' && typeof module.exports === 'object';
+const getExtraContext = (ctrl, mixState) => ({
+  get realTotalItemsSize() {
+    return mixState.itemsCount * mixState.realItemSize;
+  },
 
-  let mixin;
-
-  if (isModule) {
-    mixin = require('smart-mix');
-  } else {
-    ({mixin} = window);
+  get isVirtualizationEmptySpace() {
+    return ctrl.isScrollVirtualized
+      && ctrl.renderedItemsCount * mixState.realItemSize + ctrl.trimmedStartNegativeSize
+        < ctrl.containerClientSize;
   }
+});
 
-  const getExtraContext = (ctrl, mixState) => ({
-    get realTotalItemsSize() {
-      return mixState.itemsCount * mixState.realItemSize;
-    },
+const getExtraState = () => ({
+  realItemSize: 0
+});
 
-    get isVirtualizationEmptySpace() {
-      return ctrl.isScrollVirtualized
-        && ctrl.renderedItemsCount * mixState.realItemSize + ctrl.trimmedStartNegativeSize
-          < ctrl.containerClientSize;
+const renderClipSameSize1DMixin = mixin((ctrl, mixState) => {
+  const ctrlMix = {};
+
+  ctrlMix.getRealItemSize = () => mixState.realItemSize;
+
+  ctrlMix.init = ({
+    itemHeight,
+    itemWidth
+  }) => {
+    if (!itemHeight && !itemWidth) {
+      throw new Error('Either itemHeight or itemWidth must be provided.');
     }
-  });
 
-  const getExtraState = () => ({
-    realItemSize: 0
-  });
+    mixState.realItemSize = itemHeight || itemWidth;
+    mixState.setItemsCount = mixState.templateSetItemsCount;
+    mixState.getRealItemPosition = getRealItemPosition;
+    mixState.updateNonVirtualized = mixState.templateUpdateNonVirtualized;
+    mixState.updateRenderedItems = updateRenderedItems;
+  };
 
-  const renderClipSameSize1DMixin = mixin((ctrl, mixState) => {
-    const ctrlMix = {};
+  const getRealItemPosition = (index) => index * mixState.realItemSize;
 
-    ctrlMix.getRealItemSize = () => mixState.realItemSize;
+  const updateRenderedItems = () => {
+    mixState.setPreservingRealScrollPosition();
 
-    ctrlMix.init = ({
-      itemHeight,
-      itemWidth
-    }) => {
-      if (!itemHeight && !itemWidth) {
-        throw new Error('Either itemHeight or itemWidth must be provided.');
-      }
+    const realBeforeViewportWholeItemsCount =
+      getWholeRealItemsCountInSpace(mixState.realScrollPosition);
+    const realAfterViewportWholeItemsCount = getWholeRealItemsCountInSpace(
+      ctrl.realTotalItemsSize - mixState.realScrollPosition - ctrl.containerClientSize);
+    // can include partially visible items
+    const realViewportItemsCount = mixState.itemsCount - realBeforeViewportWholeItemsCount
+      - realAfterViewportWholeItemsCount;
+    const realBeforeViewportWholeItemsSize = realBeforeViewportWholeItemsCount
+      * mixState.realItemSize;
+    const realStartTrimmedSize = mixState.realScrollPosition - realBeforeViewportWholeItemsSize;
 
-      mixState.realItemSize = itemHeight || itemWidth;
-      mixState.setItemsCount = mixState.templateSetItemsCount;
-      mixState.getRealItemPosition = getRealItemPosition;
-      mixState.updateNonVirtualized = mixState.templateUpdateNonVirtualized;
-      mixState.updateRenderedItems = updateRenderedItems;
-    };
+    ctrl.renderedItemsStartIndex = realBeforeViewportWholeItemsCount;
+    ctrl.renderedItemsCount = realViewportItemsCount;
+    ctrl.trimmedStartNegativeSize = -realStartTrimmedSize;
+  };
 
-    const getRealItemPosition = (index) => index * mixState.realItemSize;
+  const getWholeRealItemsCountInSpace = (space) => {
+    return Math.trunc(space / mixState.realItemSize);
+  };
 
-    const updateRenderedItems = () => {
-      mixState.setPreservingRealScrollPosition();
+  return ctrlMix;
+});
 
-      const realBeforeViewportWholeItemsCount =
-        getWholeRealItemsCountInSpace(mixState.realScrollPosition);
-      const realAfterViewportWholeItemsCount = getWholeRealItemsCountInSpace(
-        ctrl.realTotalItemsSize - mixState.realScrollPosition - ctrl.containerClientSize);
-      // can include partially visible items
-      const realViewportItemsCount = mixState.itemsCount - realBeforeViewportWholeItemsCount
-        - realAfterViewportWholeItemsCount;
-      const realBeforeViewportWholeItemsSize = realBeforeViewportWholeItemsCount
-        * mixState.realItemSize;
-      const realStartTrimmedSize = mixState.realScrollPosition - realBeforeViewportWholeItemsSize;
+renderClipSameSize1DMixin.getContext = getExtraContext;
+renderClipSameSize1DMixin.getState = getExtraState;
 
-      ctrl.renderedItemsStartIndex = realBeforeViewportWholeItemsCount;
-      ctrl.renderedItemsCount = realViewportItemsCount;
-      ctrl.trimmedStartNegativeSize = -realStartTrimmedSize;
-    };
-
-    const getWholeRealItemsCountInSpace = (space) => {
-      return Math.trunc(space / mixState.realItemSize);
-    };
-
-    return ctrlMix;
-  });
-
-  renderClipSameSize1DMixin.getContext = getExtraContext;
-  renderClipSameSize1DMixin.getState = getExtraState;
-
-  const moduleExports = renderClipSameSize1DMixin;
-
-  if (isModule) {
-    module.exports = moduleExports;
-  } else {
-    window.crizmas = window.crizmas || {};
-    window.crizmas.renderClipSameSize1DMixin = moduleExports;
-  }
-})();
+export default renderClipSameSize1DMixin;

@@ -1,77 +1,58 @@
-(() => {
-  'use strict';
+let fitContentValue;
+let stickyValue;
 
-  const isModule = typeof module === 'object' && typeof module.exports === 'object';
+export const debounce = (func, delay) => {
+  let timeout;
 
-  let fitContentValue;
-  let stickyValue;
+  // make sure the function is not a constructor
+  return ({
+    function(...args) {
+      clearTimeout(timeout);
 
-  const debounce = (func, delay) => {
-    let timeout;
-
-    // make sure the function is not a constructor
-    return ({
-      function(...args) {
-        clearTimeout(timeout);
-
-        timeout = setTimeout(() => {
-          func.apply(this, args);
-        }, delay);
-      }
-    }).function;
-  };
-
-  const getFitContentValue = () => {
-    if (!fitContentValue) {
-      fitContentValue = detectFitContentValue();
+      timeout = setTimeout(() => {
+        func.apply(this, args);
+      }, delay);
     }
+  }).function;
+};
 
-    return fitContentValue;
-  };
-
-  const detectFitContentValue = () => {
-    const div = document.createElement('div');
-
-    div.style.width = 'fit-content';
-
-    if (div.style.width === 'fit-content') {
-      return 'fit-content';
-    }
-
-    return '-moz-fit-content';
-  };
-
-  const getStickyValue = () => {
-    if (!stickyValue) {
-      stickyValue = detectStickyValue();
-    }
-
-    return stickyValue;
-  };
-
-  const detectStickyValue = () => {
-    const div = document.createElement('div');
-
-    div.style.position = 'sticky';
-
-    if (div.style.position === 'sticky') {
-      return 'sticky';
-    }
-
-    // Safari requires the prefix
-    return '-webkit-sticky';
-  };
-
-  const moduleExports = {
-    debounce,
-    getFitContentValue,
-    getStickyValue
-  };
-
-  if (isModule) {
-    module.exports = moduleExports;
-  } else {
-    window.crizmas = window.crizmas || {};
-    window.crizmas.componentUtils = moduleExports;
+export const getFitContentValue = () => {
+  if (!fitContentValue) {
+    fitContentValue = detectFitContentValue();
   }
-})();
+
+  return fitContentValue;
+};
+
+const detectFitContentValue = () => {
+  const div = document.createElement('div');
+
+  div.style.width = 'fit-content';
+
+  if (div.style.width === 'fit-content') {
+    return 'fit-content';
+  }
+
+  return '-moz-fit-content';
+};
+
+export const getStickyValue = () => {
+  if (!stickyValue) {
+    stickyValue = detectStickyValue();
+  }
+
+  return stickyValue;
+};
+
+const detectStickyValue = () => {
+  const div = document.createElement('div');
+
+  div.style.position = 'sticky';
+
+  if (div.style.position === 'sticky') {
+    return 'sticky';
+  }
+
+  // Safari requires the prefix
+  return '-webkit-sticky';
+};

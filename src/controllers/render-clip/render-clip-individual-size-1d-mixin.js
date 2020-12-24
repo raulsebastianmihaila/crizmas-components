@@ -1,188 +1,169 @@
-(() => {
-  'use strict';
+import mixin from 'smart-mix';
 
-  const isModule = typeof module === 'object' && typeof module.exports === 'object';
+const getExtraContext = (ctrl, mixState) => ({
+  realTotalItemsSize: 0,
 
-  let mixin;
-
-  if (isModule) {
-    mixin = require('smart-mix');
-  } else {
-    ({mixin} = window);
+  get isVirtualizationEmptySpace() {
+    return ctrl.isScrollVirtualized
+      && mixState.totalRenderedItemsSize + ctrl.trimmedStartNegativeSize
+        < ctrl.containerClientSize;
   }
+});
 
-  const getExtraContext = (ctrl, mixState) => ({
-    realTotalItemsSize: 0,
+const getExtraState = () => ({
+  totalRenderedItemsSize: 0
+});
 
-    get isVirtualizationEmptySpace() {
-      return ctrl.isScrollVirtualized
-        && mixState.totalRenderedItemsSize + ctrl.trimmedStartNegativeSize
-          < ctrl.containerClientSize;
+const renderClipIndividualSize1DMixin = mixin((ctrl, mixState) => {
+  let itemsPositions = null;
+  const ctrlMix = {};
+
+  ctrlMix.init = ({
+    itemHeight,
+    itemWidth
+  }) => {
+    if (!itemHeight && !itemWidth) {
+      throw new Error('Either itemHeight or itemWidth must be provided.');
+    }
+
+    mixState.setItemsCount = setItemsCount;
+    mixState.getRealItemPosition = getRealItemPosition;
+    mixState.updateNonVirtualized = updateNonVirtualized;
+    mixState.updateRenderedItems = updateRenderedItems;
+
+    setRealTotalItemsSize();
+  };
+
+  ctrlMix.getGetRealItemSizeDefinition = (itemHeight, itemWidth) => ctrl.isVertical
+    ? mixState.items
+      ? (index) => itemHeight(index, mixState.items[index])
+      : (index) => itemHeight(index)
+    : mixState.items
+      ? (index) => itemWidth(index, mixState.items[index])
+      : (index) => itemWidth(index);
+
+  const setItemsCount = (itemsCount) => mixState.templateSetItemsCount(itemsCount, {
+    afterUpdatingItemsCountHook: () => {
+      setRealTotalItemsSize();
     }
   });
 
-  const getExtraState = () => ({
-    totalRenderedItemsSize: 0
+  const getRealItemPosition = (index) => itemsPositions[index];
+
+  const setRealTotalItemsSize = () => {
+    itemsPositions = new Float64Array(mixState.itemsCount + 1);
+    ctrl.realTotalItemsSize = getRealTotalItemsSizeAndPositions();
+  };
+
+  const getRealTotalItemsSizeAndPositions = () => {
+    let space = 0;
+    let {itemsCount} = mixState;
+
+    for (let i = 0; i < itemsCount; i += 1) {
+      itemsPositions[i] = space;
+      space += ctrl.getRealItemSize(i);
+    }
+
+    itemsPositions[itemsCount] = space;
+
+    return space;
+  };
+
+  const updateNonVirtualized = () => mixState.templateUpdateNonVirtualized({
+    afterUpdatingRenderingInfoHook: () => {
+      mixState.totalRenderedItemsSize = mixState.domContainer ? ctrl.realTotalItemsSize : 0;
+    }
   });
 
-  const renderClipIndividualSize1DMixin = mixin((ctrl, mixState) => {
-    let itemsPositions = null;
-    const ctrlMix = {};
+  const updateRenderedItems = () => {
+    mixState.setPreservingRealScrollPosition();
 
-    ctrlMix.init = ({
-      itemHeight,
-      itemWidth
-    }) => {
-      if (!itemHeight && !itemWidth) {
-        throw new Error('Either itemHeight or itemWidth must be provided.');
-      }
+    const {
+      lastItemIndexInSpace: firstRenderedItemIndex,
+      lastItemIndexInSpacePosition: renderedItemsSpaceStart
+    } = getLastItemInSpaceInfo(mixState.realScrollPosition);
+    const {
+      spaceEndFromLastIndexBeforePosition: renderedItemsSpaceEnd,
+      fromPositionClosestIndex: renderedItemsFromEndClosestIndex
+    } = getLastItemInSpaceInfo(mixState.realScrollPosition + ctrl.containerClientSize);
+    const realStartTrimmedSize = mixState.realScrollPosition - renderedItemsSpaceStart;
 
-      mixState.setItemsCount = setItemsCount;
-      mixState.getRealItemPosition = getRealItemPosition;
-      mixState.updateNonVirtualized = updateNonVirtualized;
-      mixState.updateRenderedItems = updateRenderedItems;
+    ctrl.renderedItemsStartIndex = firstRenderedItemIndex;
+    // can include partially visible items
+    ctrl.renderedItemsCount = renderedItemsFromEndClosestIndex - firstRenderedItemIndex;
+    ctrl.trimmedStartNegativeSize = -realStartTrimmedSize;
+    mixState.totalRenderedItemsSize = renderedItemsSpaceEnd - renderedItemsSpaceStart;
+  };
 
-      setRealTotalItemsSize();
-    };
+  const getLastItemInSpaceInfo = (position) => {
+    // due to the number type it's possible that the calculated position exceeds the limit
+    position = Math.min(position, ctrl.realTotalItemsSize);
 
-    ctrlMix.getGetRealItemSizeDefinition = (itemHeight, itemWidth) => ctrl.isVertical
-      ? mixState.items
-        ? (index) => itemHeight(index, mixState.items[index])
-        : (index) => itemHeight(index)
-      : mixState.items
-        ? (index) => itemWidth(index, mixState.items[index])
-        : (index) => itemWidth(index);
+    let lastItemIndexInSpace;
 
-    const setItemsCount = (itemsCount) => mixState.templateSetItemsCount(itemsCount, {
-      afterUpdatingItemsCountHook: () => {
-        setRealTotalItemsSize();
-      }
-    });
+    if (itemsPositions[0] === position) {
+      lastItemIndexInSpace = 0;
+    } else {
+      const lastIndex = mixState.itemsCount;
 
-    const getRealItemPosition = (index) => itemsPositions[index];
-
-    const setRealTotalItemsSize = () => {
-      itemsPositions = new Float64Array(mixState.itemsCount + 1);
-      ctrl.realTotalItemsSize = getRealTotalItemsSizeAndPositions();
-    };
-
-    const getRealTotalItemsSizeAndPositions = () => {
-      let space = 0;
-      let {itemsCount} = mixState;
-
-      for (let i = 0; i < itemsCount; i += 1) {
-        itemsPositions[i] = space;
-        space += ctrl.getRealItemSize(i);
-      }
-
-      itemsPositions[itemsCount] = space;
-
-      return space;
-    };
-
-    const updateNonVirtualized = () => mixState.templateUpdateNonVirtualized({
-      afterUpdatingRenderingInfoHook: () => {
-        mixState.totalRenderedItemsSize = mixState.domContainer ? ctrl.realTotalItemsSize : 0;
-      }
-    });
-
-    const updateRenderedItems = () => {
-      mixState.setPreservingRealScrollPosition();
-
-      const {
-        lastItemIndexInSpace: firstRenderedItemIndex,
-        lastItemIndexInSpacePosition: renderedItemsSpaceStart
-      } = getLastItemInSpaceInfo(mixState.realScrollPosition);
-      const {
-        spaceEndFromLastIndexBeforePosition: renderedItemsSpaceEnd,
-        fromPositionClosestIndex: renderedItemsFromEndClosestIndex
-      } = getLastItemInSpaceInfo(mixState.realScrollPosition + ctrl.containerClientSize);
-      const realStartTrimmedSize = mixState.realScrollPosition - renderedItemsSpaceStart;
-
-      ctrl.renderedItemsStartIndex = firstRenderedItemIndex;
-      // can include partially visible items
-      ctrl.renderedItemsCount = renderedItemsFromEndClosestIndex - firstRenderedItemIndex;
-      ctrl.trimmedStartNegativeSize = -realStartTrimmedSize;
-      mixState.totalRenderedItemsSize = renderedItemsSpaceEnd - renderedItemsSpaceStart;
-    };
-
-    const getLastItemInSpaceInfo = (position) => {
-      // due to the number type it's possible that the calculated position exceeds the limit
-      position = Math.min(position, ctrl.realTotalItemsSize);
-
-      let lastItemIndexInSpace;
-
-      if (itemsPositions[0] === position) {
-        lastItemIndexInSpace = 0;
+      if (itemsPositions[lastIndex] === position) {
+        lastItemIndexInSpace = lastIndex;
       } else {
-        const lastIndex = mixState.itemsCount;
-
-        if (itemsPositions[lastIndex] === position) {
-          lastItemIndexInSpace = lastIndex;
-        } else {
-          lastItemIndexInSpace = searchClosestFromBeforeIndex(position, 0, lastIndex);
-        }
+        lastItemIndexInSpace = searchClosestFromBeforeIndex(position, 0, lastIndex);
       }
+    }
 
-      const lastItemIndexInSpacePosition = itemsPositions[lastItemIndexInSpace];
-      const positionReached = lastItemIndexInSpacePosition === position;
-      const fromPositionClosestIndex = positionReached
-        ? lastItemIndexInSpace
-        : lastItemIndexInSpace + 1;
-      const spaceEndFromLastIndexBeforePosition = positionReached
-        ? lastItemIndexInSpacePosition
-        : lastItemIndexInSpacePosition + ctrl.getRealItemSize(lastItemIndexInSpace);
+    const lastItemIndexInSpacePosition = itemsPositions[lastItemIndexInSpace];
+    const positionReached = lastItemIndexInSpacePosition === position;
+    const fromPositionClosestIndex = positionReached
+      ? lastItemIndexInSpace
+      : lastItemIndexInSpace + 1;
+    const spaceEndFromLastIndexBeforePosition = positionReached
+      ? lastItemIndexInSpacePosition
+      : lastItemIndexInSpacePosition + ctrl.getRealItemSize(lastItemIndexInSpace);
 
-      return {
-        lastItemIndexInSpace,
-        lastItemIndexInSpacePosition,
-        fromPositionClosestIndex,
-        spaceEndFromLastIndexBeforePosition
-      };
+    return {
+      lastItemIndexInSpace,
+      lastItemIndexInSpacePosition,
+      fromPositionClosestIndex,
+      spaceEndFromLastIndexBeforePosition
     };
+  };
 
-    const searchClosestFromBeforeIndex = (position, fromIndex, lastIndex) => {
-      if (lastIndex - fromIndex === 1) {
-        const lastIndexPosition = itemsPositions[lastIndex];
+  const searchClosestFromBeforeIndex = (position, fromIndex, lastIndex) => {
+    if (lastIndex - fromIndex === 1) {
+      const lastIndexPosition = itemsPositions[lastIndex];
 
-        if (lastIndexPosition < position) {
-          return lastIndex;
-        }
-
-        return fromIndex;
+      if (lastIndexPosition < position) {
+        return lastIndex;
       }
 
-      const midIndex = Math.floor((fromIndex + lastIndex) / 2);
-      const midIndexPosition = itemsPositions[midIndex];
+      return fromIndex;
+    }
 
-      if (midIndexPosition === position) {
-        return midIndex;
-      }
+    const midIndex = Math.floor((fromIndex + lastIndex) / 2);
+    const midIndexPosition = itemsPositions[midIndex];
 
-      if (midIndexPosition < position) {
-        return searchClosestFromBeforeIndex(position, midIndex, lastIndex);
-      }
+    if (midIndexPosition === position) {
+      return midIndex;
+    }
 
-      return searchClosestFromBeforeIndex(position, fromIndex, midIndex);
-    };
+    if (midIndexPosition < position) {
+      return searchClosestFromBeforeIndex(position, midIndex, lastIndex);
+    }
 
-    ctrlMix.updateLayout = () => {
-      setRealTotalItemsSize();
-      ctrl.refresh();
-    };
+    return searchClosestFromBeforeIndex(position, fromIndex, midIndex);
+  };
 
-    return ctrlMix;
-  });
+  ctrlMix.updateLayout = () => {
+    setRealTotalItemsSize();
+    ctrl.refresh();
+  };
 
-  renderClipIndividualSize1DMixin.getContext = getExtraContext;
-  renderClipIndividualSize1DMixin.getState = getExtraState;
+  return ctrlMix;
+});
 
-  const moduleExports = renderClipIndividualSize1DMixin;
+renderClipIndividualSize1DMixin.getContext = getExtraContext;
+renderClipIndividualSize1DMixin.getState = getExtraState;
 
-  if (isModule) {
-    module.exports = moduleExports;
-  } else {
-    window.crizmas = window.crizmas || {};
-    window.crizmas.renderClipIndividualSize1DMixin = moduleExports;
-  }
-})();
+export default renderClipIndividualSize1DMixin;

@@ -1,3 +1,13 @@
+<a name="2.0.0"></a>
+# [2.0.0](https://github.com/raulsebastianmihaila/crizmas-components/compare/v1.5.3...v2.0.0) (2021-01-01)
+
+### Breaking changes
+- Dropped support for non-module script tags.
+
+### Updates
+- Moved from commonjs modules to standard ES modules.
+- Updated crizmas-mvc and smart-mix peer dependencies.
+
 <a name="1.5.3"></a>
 # [1.5.3](https://github.com/raulsebastianmihaila/crizmas-components/compare/v1.5.2...v1.5.3) (2020-11-30)
 

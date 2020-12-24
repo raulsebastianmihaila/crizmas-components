@@ -1,74 +1,53 @@
-(() => {
-  'use strict';
+import {controller} from 'crizmas-mvc';
 
-  const isModule = typeof module === 'object' && typeof module.exports === 'object';
+import RenderClip1DController from './render-clip-1d.js';
 
-  let Mvc;
-  let RenderClip1DController;
+export default controller(function RenderClip2DController({
+  verticalItemsCount = 0,
+  horizontalItemsCount = 0,
+  itemHeight,
+  itemWidth
+} = {}) {
+  const ctrl = {
+    verticalRenderClipController: new RenderClip1DController({
+      itemsCount: verticalItemsCount,
+      itemHeight
+    }),
+    horizontalRenderClipController: new RenderClip1DController({
+      itemsCount: horizontalItemsCount,
+      itemWidth
+    })
+  };
 
-  if (isModule) {
-    Mvc = require('crizmas-mvc');
-    RenderClip1DController = require('./render-clip-1d');
-  } else {
-    ({Mvc, RenderClip1DController} = window.crizmas);
-  }
+  ctrl.setDomContainer = (domContainer) => {
+    ctrl.verticalRenderClipController.setDomContainer(domContainer);
+    ctrl.horizontalRenderClipController.setDomContainer(domContainer);
+  };
 
-  const RenderClip2DController = Mvc.controller(function RenderClip2DController({
-    verticalItemsCount = 0,
-    horizontalItemsCount = 0,
-    itemHeight,
-    itemWidth
-  } = {}) {
-    const ctrl = {
-      verticalRenderClipController: new RenderClip1DController({
-        itemsCount: verticalItemsCount,
-        itemHeight
-      }),
-      horizontalRenderClipController: new RenderClip1DController({
-        itemsCount: horizontalItemsCount,
-        itemWidth
-      })
-    };
+  ctrl.setItemsCount = ({verticalItemsCount, horizontalItemsCount}) => {
+    ctrl.verticalRenderClipController.setItemsCount(verticalItemsCount);
+    ctrl.horizontalRenderClipController.setItemsCount(horizontalItemsCount);
+  };
 
-    ctrl.setDomContainer = (domContainer) => {
-      ctrl.verticalRenderClipController.setDomContainer(domContainer);
-      ctrl.horizontalRenderClipController.setDomContainer(domContainer);
-    };
+  ctrl.refresh = () => {
+    ctrl.verticalRenderClipController.refresh();
+    ctrl.horizontalRenderClipController.refresh();
+  };
 
-    ctrl.setItemsCount = ({verticalItemsCount, horizontalItemsCount}) => {
-      ctrl.verticalRenderClipController.setItemsCount(verticalItemsCount);
-      ctrl.horizontalRenderClipController.setItemsCount(horizontalItemsCount);
-    };
+  ctrl.onScroll = () => {
+    ctrl.verticalRenderClipController.onScroll();
+    ctrl.horizontalRenderClipController.onScroll();
+  };
 
-    ctrl.refresh = () => {
-      ctrl.verticalRenderClipController.refresh();
-      ctrl.horizontalRenderClipController.refresh();
-    };
+  ctrl.updateLayout = () => {
+    if (ctrl.verticalRenderClipController.updateLayout) {
+      ctrl.verticalRenderClipController.updateLayout();
+    }
 
-    ctrl.onScroll = () => {
-      ctrl.verticalRenderClipController.onScroll();
-      ctrl.horizontalRenderClipController.onScroll();
-    };
+    if (ctrl.horizontalRenderClipController.updateLayout) {
+      ctrl.horizontalRenderClipController.updateLayout();
+    }
+  };
 
-    ctrl.updateLayout = () => {
-      if (ctrl.verticalRenderClipController.updateLayout) {
-        ctrl.verticalRenderClipController.updateLayout();
-      }
-
-      if (ctrl.horizontalRenderClipController.updateLayout) {
-        ctrl.horizontalRenderClipController.updateLayout();
-      }
-    };
-
-    return ctrl;
-  });
-
-  const moduleExports = RenderClip2DController;
-
-  if (isModule) {
-    module.exports = moduleExports;
-  } else {
-    window.crizmas = window.crizmas || {};
-    window.crizmas.RenderClip2DController = moduleExports;
-  }
-})();
+  return ctrl;
+});

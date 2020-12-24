@@ -1,159 +1,154 @@
-(() => {
-  'use strict';
+import React from 'react';
+import propTypes from 'prop-types';
 
-  const isModule = typeof module === 'object' && typeof module.exports === 'object';
+import {getFitContentValue, getStickyValue} from '../../utils.js';
 
-  let React;
-  let PropTypes;
-  let componentUtils;
+const {createElement} = React;
 
-  if (isModule) {
-    React = require('react');
-    PropTypes = require('prop-types');
-    componentUtils = require('../../utils');
-  } else {
-    React = window.React;
-    PropTypes = window.PropTypes;
-    ({componentUtils} = window.crizmas);
-  }
+const fitContentValue = getFitContentValue();
+const stickyValue = getStickyValue();
 
-  const {Component, createElement} = React;
-  const {getFitContentValue, getStickyValue} = componentUtils;
+export default class RenderClip2D extends React.Component {
+  constructor() {
+    super();
 
-  const fitContentValue = getFitContentValue();
-  const stickyValue = getStickyValue();
+    this.containerRef = React.createRef();
 
-  class RenderClip2D extends Component {
-    constructor() {
-      super();
+    this.onScroll = (e) => {
+      if (e.target === this.containerRef.current) {
+        this.props.controller.onScroll();
+      }
+    };
 
-      this.containerRef = React.createRef();
-
-      this.onScroll = (e) => {
-        if (e.target === this.containerRef.current) {
-          this.props.controller.onScroll();
-        }
-      };
-
-      this.syncHeightAfterRender = () => {
-        if (!this.props.controller.verticalRenderClipController.renderedItemsCount
-          || !this.props.controller.horizontalRenderClipController.renderedItemsCount) {
-          return;
-        }
-
-        const {mustReapplyLastOperationForSizeSync: mustReapplyVerticalLastOperationForSizeSync,
-          lastOperationForSizeSync: verticalLastOperationForSizeSync} =
-          this.props.controller.verticalRenderClipController.onRender();
-        const {mustReapplyLastOperationForSizeSync: mustReapplyHorizontalLastOperationForSizeSync,
-          lastOperationForSizeSync: horizontalLastOperationForSizeSync} =
-          this.props.controller.horizontalRenderClipController.onRender();
-
-        if (mustReapplyVerticalLastOperationForSizeSync) {
-          verticalLastOperationForSizeSync();
-        }
-
-        if (mustReapplyHorizontalLastOperationForSizeSync) {
-          horizontalLastOperationForSizeSync();
-        }
-      };
-
-      this.onWindowResize = () => {
-        this.props.controller.refresh();
-      };
-    }
-
-    componentDidMount() {
-      this.props.controller.setDomContainer(this.containerRef.current);
-      window.addEventListener('resize', this.onWindowResize);
-    }
-
-    componentDidUpdate(prevProps) {
-      if (this.props.controller !== prevProps.controller) {
-        this.props.controller.setDomContainer(this.containerRef.current);
+    this.syncHeightAfterRender = () => {
+      if (!this.props.controller.verticalRenderClipController.renderedItemsCount
+        || !this.props.controller.horizontalRenderClipController.renderedItemsCount) {
+        return;
       }
 
-      this.syncHeightAfterRender();
+      const {mustReapplyLastOperationForSizeSync: mustReapplyVerticalLastOperationForSizeSync,
+        lastOperationForSizeSync: verticalLastOperationForSizeSync} =
+        this.props.controller.verticalRenderClipController.onRender();
+      const {mustReapplyLastOperationForSizeSync: mustReapplyHorizontalLastOperationForSizeSync,
+        lastOperationForSizeSync: horizontalLastOperationForSizeSync} =
+        this.props.controller.horizontalRenderClipController.onRender();
+
+      if (mustReapplyVerticalLastOperationForSizeSync) {
+        verticalLastOperationForSizeSync();
+      }
+
+      if (mustReapplyHorizontalLastOperationForSizeSync) {
+        horizontalLastOperationForSizeSync();
+      }
+    };
+
+    this.onWindowResize = () => {
+      this.props.controller.refresh();
+    };
+  }
+
+  componentDidMount() {
+    this.props.controller.setDomContainer(this.containerRef.current);
+    window.addEventListener('resize', this.onWindowResize);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.controller !== prevProps.controller) {
+      this.props.controller.setDomContainer(this.containerRef.current);
     }
 
-    componentWillUnmount() {
-      this.props.controller.setDomContainer(null);
-      window.removeEventListener('resize', this.onWindowResize);
-    }
+    this.syncHeightAfterRender();
+  }
 
-    render() {
-      const {
-        controller: {verticalRenderClipController, horizontalRenderClipController},
-        renderRow,
-        renderCell
-      } = this.props;
+  componentWillUnmount() {
+    this.props.controller.setDomContainer(null);
+    window.removeEventListener('resize', this.onWindowResize);
+  }
 
-      return createElement('div', {
-          ref: this.containerRef,
-          style: {
-            position: 'relative',
-            width: '100%',
-            height: '100%',
-            overflow: 'auto',
-            whiteSpace: 'nowrap'
-          },
-          onScroll: this.onScroll
+  render() {
+    const {
+      controller: {verticalRenderClipController, horizontalRenderClipController},
+      renderRow,
+      renderCell
+    } = this.props;
+
+    return createElement(
+      'div',
+      {
+        ref: this.containerRef,
+        style: {
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+          overflow: 'auto',
+          whiteSpace: 'nowrap'
         },
-        !!verticalRenderClipController.renderedItemsCount
-          && !!horizontalRenderClipController.renderedItemsCount
-          && createElement('div', {
-              style: {
-                position: stickyValue,
-                top: verticalRenderClipController.isScrollVirtualized ? 0 : 'unset',
-                left: horizontalRenderClipController.isScrollVirtualized ? 0 : 'unset',
-                height: verticalRenderClipController.isScrollVirtualized
-                  ? '100%'
-                  : horizontalRenderClipController.isScrollVirtualized
-                    ? fitContentValue
-                    : 'unset',
-                width: horizontalRenderClipController.isScrollVirtualized
-                  ? '100%'
-                  : verticalRenderClipController.isScrollVirtualized
-                    ? fitContentValue
-                    : 'unset',
-                overflowY: verticalRenderClipController.isScrollVirtualized
-                  ? 'hidden'
+        onScroll: this.onScroll
+      },
+      !!verticalRenderClipController.renderedItemsCount
+        && !!horizontalRenderClipController.renderedItemsCount
+        && createElement(
+          'div',
+          {
+            style: {
+              position: stickyValue,
+              top: verticalRenderClipController.isScrollVirtualized ? 0 : 'unset',
+              left: horizontalRenderClipController.isScrollVirtualized ? 0 : 'unset',
+              height: verticalRenderClipController.isScrollVirtualized
+                ? '100%'
+                : horizontalRenderClipController.isScrollVirtualized
+                  ? fitContentValue
                   : 'unset',
-                overflowX: horizontalRenderClipController.isScrollVirtualized
-                  ? 'hidden'
-                  : 'unset'
+              width: horizontalRenderClipController.isScrollVirtualized
+                ? '100%'
+                : verticalRenderClipController.isScrollVirtualized
+                  ? fitContentValue
+                  : 'unset',
+              overflowY: verticalRenderClipController.isScrollVirtualized
+                ? 'hidden'
+                : 'unset',
+              overflowX: horizontalRenderClipController.isScrollVirtualized
+                ? 'hidden'
+                : 'unset'
+            }
+          },
+          createElement(
+            'div',
+            {
+              style: {
+                transform: `translateY(${
+                  verticalRenderClipController.trimmedStartNegativeSize}px) translateX(${
+                  horizontalRenderClipController.trimmedStartNegativeSize}px)`
               }
             },
-            createElement('div', {
-                style: {transform: `translateY(${
-                  verticalRenderClipController.trimmedStartNegativeSize}px) translateX(${
-                  horizontalRenderClipController.trimmedStartNegativeSize}px)`}
-              },
-              Array.from(
-                {length: verticalRenderClipController.renderedItemsCount},
-                (v, index) => {
-                  const rowIndex = verticalRenderClipController.renderedItemsStartIndex + index;
+            Array.from(
+              {length: verticalRenderClipController.renderedItemsCount},
+              (v, index) => {
+                const rowIndex = verticalRenderClipController.renderedItemsStartIndex + index;
 
-                  return renderRow({
-                    index: rowIndex,
-                    itemHeight: verticalRenderClipController.getRealItemSize(rowIndex),
-                    renderCells: () => Array.from(
-                      {length: horizontalRenderClipController.renderedItemsCount},
-                      (v, index) => {
-                        const cellIndex = horizontalRenderClipController.renderedItemsStartIndex
-                          + index;
+                return renderRow({
+                  index: rowIndex,
+                  itemHeight: verticalRenderClipController.getRealItemSize(rowIndex),
+                  renderCells: () => Array.from(
+                    {length: horizontalRenderClipController.renderedItemsCount},
+                    (v, index) => {
+                      const cellIndex = horizontalRenderClipController.renderedItemsStartIndex
+                        + index;
 
-                        return renderCell({
-                          index: cellIndex,
-                          itemWidth: horizontalRenderClipController.getRealItemSize(cellIndex),
-                          itemHeight: verticalRenderClipController.getRealItemSize(rowIndex),
-                          rowIndex
-                        });
-                      })
-                  });
-                }))),
-        !!verticalRenderClipController.renderedItemsCount
-          && verticalRenderClipController.isScrollVirtualized
-          && createElement('div', {
+                      return renderCell({
+                        index: cellIndex,
+                        itemWidth: horizontalRenderClipController.getRealItemSize(cellIndex),
+                        itemHeight: verticalRenderClipController.getRealItemSize(rowIndex),
+                        rowIndex
+                      });
+                    })
+                });
+              }))),
+      !!verticalRenderClipController.renderedItemsCount
+        && verticalRenderClipController.isScrollVirtualized
+        && createElement(
+          'div',
+          {
             style: {
               position: 'absolute',
               left: 0,
@@ -163,9 +158,11 @@
               height: verticalRenderClipController.virtualTotalItemsSize
             }
           }),
-        !!horizontalRenderClipController.renderedItemsCount
-          && horizontalRenderClipController.isScrollVirtualized
-          && createElement('div', {
+      !!horizontalRenderClipController.renderedItemsCount
+        && horizontalRenderClipController.isScrollVirtualized
+        && createElement(
+          'div',
+          {
             style: {
               position: 'absolute',
               left: 0,
@@ -175,20 +172,11 @@
               width: horizontalRenderClipController.virtualTotalItemsSize
             }
           }));
-    }
   }
+}
 
-  RenderClip2D.propTypes = {
-    controller: PropTypes.object.isRequired,
-    renderRow: PropTypes.func.isRequired,
-    renderCell: PropTypes.func.isRequired
-  };
-
-  const moduleExports = RenderClip2D;
-
-  if (isModule) {
-    module.exports = moduleExports;
-  } else {
-    window.crizmas.RenderClip2D = moduleExports;
-  }
-})();
+RenderClip2D.propTypes = {
+  controller: propTypes.object.isRequired,
+  renderRow: propTypes.func.isRequired,
+  renderCell: propTypes.func.isRequired
+};

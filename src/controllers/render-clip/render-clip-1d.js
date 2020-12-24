@@ -1,49 +1,28 @@
 // this is used as part of a 2d controller
 
-(() => {
-  'use strict';
+import {controller, ignore} from 'crizmas-mvc';
 
-  const isModule = typeof module === 'object' && typeof module.exports === 'object';
+import getRenderClip1DDefinition from './render-clip-1d-definition.js';
 
-  let Mvc;
-  let getRenderClip1DDefinition;
-
-  if (isModule) {
-    Mvc = require('crizmas-mvc');
-    getRenderClip1DDefinition = require('./render-clip-1d-definition');
-  } else {
-    ({Mvc, getRenderClip1DDefinition} = window.crizmas);
-  }
-
-  const RenderClip1D = Mvc.controller(function RenderClip1D({
+export default controller(function RenderClip1DController({
+  items,
+  itemsCount,
+  itemHeight,
+  itemWidth
+} = {}) {
+  const definition = getRenderClip1DDefinition({
     items,
     itemsCount,
     itemHeight,
     itemWidth
-  } = {}) {
-    const definition = getRenderClip1DDefinition({
-      items,
-      itemsCount,
-      itemHeight,
-      itemWidth
-    });
-    const {ctrl, ctrlMixState, ctrlMix} = definition;
-
-    ctrl.refresh = ctrlMixState.refreshWithCurrentRealScrollPosition;
-
-    ctrl.onRender = Mvc.ignore(ctrlMix.onRender);
-
-    definition.init();
-
-    return ctrl;
   });
+  const {ctrl, ctrlMixState, ctrlMix} = definition;
 
-  const moduleExports = RenderClip1D;
+  ctrl.refresh = ctrlMixState.refreshWithCurrentRealScrollPosition;
 
-  if (isModule) {
-    module.exports = moduleExports;
-  } else {
-    window.crizmas = window.crizmas || {};
-    window.crizmas.RenderClip1DController = moduleExports;
-  }
-})();
+  ctrl.onRender = ignore(ctrlMix.onRender);
+
+  definition.init();
+
+  return ctrl;
+});
