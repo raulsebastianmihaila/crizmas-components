@@ -97,14 +97,20 @@ export default class Input extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.debounce !== prevProps.debounce) {
-      if (this.props.onChange !== prevProps.onChange) {
-        this.setOnChangeMethod();
-      }
+    const debounceChanged = this.props.debounce !== prevProps.debounce;
+    let onChangeChanged;
+    let onBlurChanged;
 
-      if (this.props.onBlur !== prevProps.onBlur) {
-        this.setOnBlurMethod();
-      }
+    if (debounceChanged || this.props.onChange !== prevProps.onChange) {
+      this.setOnChangeMethod();
+
+      onChangeChanged = true;
+    }
+
+    if (debounceChanged || this.props.onBlur !== prevProps.onBlur) {
+      this.setOnBlurMethod();
+
+      onBlurChanged = true;
     }
 
     // we must ignore the same value when we have an intermediary string representation
@@ -114,6 +120,8 @@ export default class Input extends React.Component {
         value: this.props.value,
         oldValue: this.props.value
       });
+    } else if (onChangeChanged || onBlurChanged) {
+      this.forceUpdate();
     }
   }
 
