@@ -10,10 +10,10 @@
   },
   "type": "module",
   "peerDependencies": {
-    "crizmas-mvc": "^2.0.0",
-    "prop-types": "^15.6.2",
-    "react": "^16.5.2 || ^17.0.0",
-    "smart-mix": "^2.0.0"
+    "crizmas-mvc": "^2.0.3",
+    "prop-types": "^15.7.2",
+    "react": "^16.5.2 || ^17.0.2",
+    "smart-mix": "^2.0.1"
   },
   "homepage": "https://raulsebastianmihaila.github.io/crizmas-mvc-docs",
   "repository": {

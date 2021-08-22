@@ -1,3 +1,9 @@
+<a name="2.0.3"></a>
+# [2.0.3](https://github.com/raulsebastianmihaila/crizmas-components/compare/v2.0.2...v2.0.3) (2021-08-22)
+
+### Updates
+- Updated crizmas-mvc, prop-types, react and smart-mix peer dependencies.
+
 <a name="2.0.2"></a>
 # [2.0.2](https://github.com/raulsebastianmihaila/crizmas-components/compare/v2.0.1...v2.0.2) (2021-01-25)
 
