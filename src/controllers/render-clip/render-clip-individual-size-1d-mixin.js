@@ -4,9 +4,11 @@ const getExtraContext = (ctrl, mixState) => ({
   realTotalItemsSize: 0,
 
   get isVirtualizationEmptySpace() {
+    // comparison with 0.1 prevents weird floating point issues
     return ctrl.isScrollVirtualized
-      && mixState.totalRenderedItemsSize + ctrl.trimmedStartNegativeSize
-        < ctrl.containerClientSize;
+      && ctrl.containerClientSize
+        - (mixState.totalRenderedItemsSize + ctrl.trimmedStartNegativeSize)
+          > 0.1;
   }
 });
 

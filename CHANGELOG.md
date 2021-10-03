@@ -1,3 +1,10 @@
+<a name="2.0.4"></a>
+# [2.0.4](https://github.com/raulsebastianmihaila/crizmas-components/compare/v2.0.3...v2.0.4) (2021-10-19)
+
+### Fixes
+- Handle newly discovered edge case in floating point arithmetic used in scroll virtualization.
+- Slow down scrolling using the wheel in translated scroll virtualization when it's too fast.
+
 <a name="2.0.3"></a>
 # [2.0.3](https://github.com/raulsebastianmihaila/crizmas-components/compare/v2.0.2...v2.0.3) (2021-08-22)
 

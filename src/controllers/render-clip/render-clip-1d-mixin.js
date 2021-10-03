@@ -10,6 +10,7 @@ import mixin from 'smart-mix';
 const maxAllowedVirtualTotalItemsSize = 1e6;
 const maxTranslatedVirtualizationScrollRecomputationDif = 1e2;
 const smoothTranslatedVirtualizationScrollDif = 40;
+const maxRelevantWheelUsageDif = 50;
 
 const directions = {
   vertical: Symbol('vertical'),
@@ -119,6 +120,8 @@ const renderClip1DMixin = mixin((ctrl, mixState) => {
   let currentVirtualScrollPosition = 0;
   let lastOperationForSizeSync = null;
   let prevIsOrthogonalOverflow = false;
+  let isWheelUsed = false;
+  let lastWheelUsageTimestamp = -Infinity;
   const ctrlMix = {};
 
   ctrlMix.init = ({
@@ -327,8 +330,24 @@ const renderClip1DMixin = mixin((ctrl, mixState) => {
     mixState.refreshWithCurrentRealScrollPosition();
   };
 
+  ctrlMix.onWheel = () => {
+    if (ctrl.isTranslatedVirtualization) {
+      isWheelUsed = true;
+      lastWheelUsageTimestamp = performance.now();
+    }
+  };
+
   ctrlMix.onScroll = () => {
     const wasVirtualScrollPositionSetProgramatically = isVirtualScrollPositionSetProgramatically;
+    let wasWheelUsed = false;
+    
+    if (isWheelUsed) {
+      if (performance.now() - lastWheelUsageTimestamp > maxRelevantWheelUsageDif) {
+        isWheelUsed = false;
+      } else {
+        wasWheelUsed = true;
+      }
+    }
 
     isVirtualScrollPositionSetProgramatically = false;
 
@@ -340,13 +359,21 @@ const renderClip1DMixin = mixin((ctrl, mixState) => {
 
     currentVirtualScrollPosition = ctrl.containerScrollPosition;
 
-    if (ctrl.isTranslatedVirtualization
-      && !wasVirtualScrollPositionSetProgramatically
-      && Math.abs(scrollDif) <= maxTranslatedVirtualizationScrollRecomputationDif) {
-      scrollDif = Math.sign(scrollDif)
-        * Math.max(Math.abs(scrollDif), smoothTranslatedVirtualizationScrollDif);
+    if (ctrl.isTranslatedVirtualization && !wasVirtualScrollPositionSetProgramatically) {
+      let mustCorrectScroll = false;
 
-      return void refreshWithRealScrollPosition(mixState.realScrollPosition + scrollDif);
+      if (Math.abs(scrollDif) <= maxTranslatedVirtualizationScrollRecomputationDif) {
+        mustCorrectScroll = true;
+        scrollDif = Math.sign(scrollDif)
+          * Math.max(Math.abs(scrollDif), smoothTranslatedVirtualizationScrollDif);
+      } else if (wasWheelUsed) {
+        mustCorrectScroll = true;
+        scrollDif = Math.sign(scrollDif) * smoothTranslatedVirtualizationScrollDif;
+      }
+
+      if (mustCorrectScroll) {
+        return void refreshWithRealScrollPosition(mixState.realScrollPosition + scrollDif);
+      }
     }
 
     mixState.updateRenderedItems();
