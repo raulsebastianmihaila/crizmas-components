@@ -1,3 +1,9 @@
+<a name="2.1.0"></a>
+# [2.1.0](https://github.com/raulsebastianmihaila/crizmas-components/compare/v2.0.4...v2.1.0) (2021-10-24)
+
+### Updates
+- Added prop to render-clip components to allow preventing focus with the tab key.
+
 <a name="2.0.4"></a>
 # [2.0.4](https://github.com/raulsebastianmihaila/crizmas-components/compare/v2.0.3...v2.0.4) (2021-10-19)
 

@@ -69,13 +69,15 @@ export default class RenderClip2D extends React.Component {
     const {
       controller: {verticalRenderClipController, horizontalRenderClipController},
       renderRow,
-      renderCell
+      renderCell,
+      preventTabFocus
     } = this.props;
 
     return createElement(
       'div',
       {
         ref: this.containerRef,
+        tabIndex: preventTabFocus ? -1 : null,
         style: {
           position: 'relative',
           width: '100%',
@@ -178,5 +180,6 @@ export default class RenderClip2D extends React.Component {
 RenderClip2D.propTypes = {
   controller: propTypes.object.isRequired,
   renderRow: propTypes.func.isRequired,
-  renderCell: propTypes.func.isRequired
+  renderCell: propTypes.func.isRequired,
+  preventTabFocus: propTypes.bool
 };

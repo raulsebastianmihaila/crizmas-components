@@ -112,13 +112,15 @@ export default class RenderClip extends React.Component {
       controller: {renderedItemsStartIndex, renderedItemsCount, trimmedStartNegativeSize,
         virtualTotalItemsSize, isScrollVirtualized, items, getRealItemSize},
       renderItem,
-      stretch
+      stretch,
+      preventTabFocus
     } = this.props;
 
     return createElement(
       'div',
       {
         ref: this.containerRef,
+        tabIndex: preventTabFocus ? -1 : null,
         style: {
           position: 'relative',
           width: '100%',
@@ -175,5 +177,6 @@ export default class RenderClip extends React.Component {
 RenderClip.propTypes = {
   controller: propTypes.object.isRequired,
   renderItem: propTypes.func.isRequired,
-  stretch: propTypes.bool
+  stretch: propTypes.bool,
+  preventTabFocus: propTypes.bool
 };
