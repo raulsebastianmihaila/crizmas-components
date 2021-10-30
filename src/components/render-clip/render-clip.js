@@ -120,7 +120,7 @@ export default class RenderClip extends React.Component {
       'div',
       {
         ref: this.containerRef,
-        tabIndex: preventTabFocus ? -1 : null,
+        tabIndex: preventTabFocus ? -1 : 0,
         style: {
           position: 'relative',
           width: '100%',

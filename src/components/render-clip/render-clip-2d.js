@@ -77,7 +77,7 @@ export default class RenderClip2D extends React.Component {
       'div',
       {
         ref: this.containerRef,
-        tabIndex: preventTabFocus ? -1 : null,
+        tabIndex: preventTabFocus ? -1 : 0,
         style: {
           position: 'relative',
           width: '100%',

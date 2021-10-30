@@ -1,3 +1,9 @@
+<a name="2.1.1"></a>
+# [2.1.1](https://github.com/raulsebastianmihaila/crizmas-components/compare/v2.1.0...v2.1.1) (2021-10-30)
+
+### Fixes
+- Ensure that by default the render-clip components can receive focus.
+
 <a name="2.1.0"></a>
 # [2.1.0](https://github.com/raulsebastianmihaila/crizmas-components/compare/v2.0.4...v2.1.0) (2021-10-24)
 
