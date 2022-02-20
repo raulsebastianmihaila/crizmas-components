@@ -28,7 +28,7 @@ export default class RenderClip extends React.Component {
     this.syncHeightAfterRender = () => {
       const {renderedItemsCount, orthogonalScrollSizeProp, onRender} = this.props.controller;
 
-      if (!renderedItemsCount) {
+      if (!renderedItemsCount || !this.renderedItemsRef.current) {
         return;
       }
 

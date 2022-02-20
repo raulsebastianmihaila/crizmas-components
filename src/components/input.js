@@ -100,14 +100,23 @@ export default class Input extends React.Component {
     const debounceChanged = this.props.debounce !== prevProps.debounce;
     let onChangeChanged;
     let onBlurChanged;
+    let oldOnchange = this.onChange;
 
     if (debounceChanged || this.props.onChange !== prevProps.onChange) {
+      this.onChange?.commit?.();
+
       this.setOnChangeMethod();
 
       onChangeChanged = true;
     }
 
     if (debounceChanged || this.props.onBlur !== prevProps.onBlur) {
+      if (!onChangeChanged) {
+        oldOnchange?.commit?.();
+      }
+
+      this.onBlur?.commit?.();
+
       this.setOnBlurMethod();
 
       onBlurChanged = true;
@@ -194,6 +203,11 @@ export default class Input extends React.Component {
     this.onBlur = inputDebounce === 0
       ? this.props.onBlur
       : debounce(this.props.onBlur, inputDebounce);
+  }
+
+  componentWillUnmount() {
+    this.onChange?.commit?.();
+    this.onBlur?.commit?.();
   }
 
   render() {

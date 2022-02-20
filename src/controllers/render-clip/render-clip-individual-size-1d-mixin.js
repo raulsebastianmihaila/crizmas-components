@@ -3,12 +3,11 @@ import mixin from 'smart-mix';
 const getExtraContext = (ctrl, mixState) => ({
   realTotalItemsSize: 0,
 
-  get isVirtualizationEmptySpace() {
+  get isEmptySpace() {
     // comparison with 0.1 prevents weird floating point issues
-    return ctrl.isScrollVirtualized
-      && ctrl.containerClientSize
-        - (mixState.totalRenderedItemsSize + ctrl.trimmedStartNegativeSize)
-          > 0.1;
+    return ctrl.containerClientSize
+      - (mixState.totalRenderedItemsSize + ctrl.trimmedStartNegativeSize)
+        > 0.1;
   }
 });
 

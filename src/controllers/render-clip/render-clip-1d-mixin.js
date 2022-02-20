@@ -94,6 +94,10 @@ const getContext = (ctrl, mixState) => ({
 
   get isOrthogonalOverflow() {
     return ctrl.containerOrthogonalScrollSize > ctrl.containerOrthogonalClientSize;
+  },
+
+  get isVirtualizationEmptySpace() {
+    return ctrl.isScrollVirtualized && ctrl.isEmptySpace;
   }
 });
 
@@ -117,6 +121,7 @@ const renderClip1DMixin = mixin((ctrl, mixState) => {
   let preserveRealScrollPosition = false;
   let lastPreserveRealScrollVirtualScrollPosition = null;
   let isVirtualScrollPositionSetProgramatically = false;
+  let isSetItemsCountRerenderingCheckScheduled = false;
   let currentVirtualScrollPosition = 0;
   let lastOperationForSizeSync = null;
   let prevIsOrthogonalOverflow = false;
@@ -171,6 +176,11 @@ const renderClip1DMixin = mixin((ctrl, mixState) => {
   };
 
   ctrlMix.setItemsCount = (itemsCount) => {
+    // it's possible that the container size is set based on the number of rendered items
+    // and when setting the items count, it's possible that the rendered items count was computed
+    // based on the old container size and that now there is empty space but without virtualization
+    isSetItemsCountRerenderingCheckScheduled = true;
+
     return mixState.setItemsCount(itemsCount);
   };
 
@@ -277,6 +287,9 @@ const renderClip1DMixin = mixin((ctrl, mixState) => {
       mustReapplyLastOperationForSizeSync: false,
       lastOperationForSizeSync: operationForSizeSync
     };
+    const wasSetItemsCountRerenderingCheckScheduled = isSetItemsCountRerenderingCheckScheduled;
+
+    isSetItemsCountRerenderingCheckScheduled = false;
 
     if (mustResetScrollPositionAfterMount) {
       mustResetScrollPositionAfterMount = false;
@@ -292,7 +305,8 @@ const renderClip1DMixin = mixin((ctrl, mixState) => {
       prevIsOrthogonalOverflow = ctrl.isOrthogonalOverflow;
 
       if (ctrl.isVirtualizationEmptySpace
-        || !wasOrthogonalOverflow && prevIsOrthogonalOverflow) {
+        || !wasOrthogonalOverflow && prevIsOrthogonalOverflow
+        || wasSetItemsCountRerenderingCheckScheduled && ctrl.isEmptySpace) {
         return {
           ...syncResolutionDefaults,
           mustReapplyLastOperationForSizeSync: true
@@ -340,7 +354,7 @@ const renderClip1DMixin = mixin((ctrl, mixState) => {
   ctrlMix.onScroll = () => {
     const wasVirtualScrollPositionSetProgramatically = isVirtualScrollPositionSetProgramatically;
     let wasWheelUsed = false;
-    
+
     if (isWheelUsed) {
       if (performance.now() - lastWheelUsageTimestamp > maxRelevantWheelUsageDif) {
         isWheelUsed = false;

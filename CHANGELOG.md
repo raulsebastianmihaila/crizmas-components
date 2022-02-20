@@ -1,3 +1,15 @@
+<a name="2.1.2"></a>
+# [2.1.2](https://github.com/raulsebastianmihaila/crizmas-components/compare/v2.1.1...v2.1.2) (2022-02-27)
+
+### Updates
+- Input: commit pending onChange and onBlur when they change or the debounce value changes and on unmount.
+- Render clip: handle case when the container size is set based on the items count and the count changes leaving an empty space in a case of nonvirtualization.
+- Update crizmas-mvc and prop-types peer dependencies.
+- Configure npm to use legacy peer dependency behavior.
+
+### Fixes
+- Render clip: fix case when the controller is replaced, which causes a wrapper div to not be initially displayed.
+
 <a name="2.1.1"></a>
 # [2.1.1](https://github.com/raulsebastianmihaila/crizmas-components/compare/v2.1.0...v2.1.1) (2021-10-30)
 

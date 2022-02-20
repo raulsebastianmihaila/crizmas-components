@@ -3,17 +3,42 @@ let stickyValue;
 
 export const debounce = (func, delay) => {
   let timeout;
+  let isScheduled;
+  let that;
+  let args;
+
+  const commit = () => {
+    if (isScheduled) {
+      isScheduled = false;
+
+      clearTimeout(timeout);
+      func.apply(that, args);
+    }
+  };
 
   // make sure the function is not a constructor
-  return ({
-    function(...args) {
+  const debouncedFunc = ({
+    function(...args_) {
+      that = this;
+      args = args_;
+      isScheduled = true;
+
       clearTimeout(timeout);
 
-      timeout = setTimeout(() => {
-        func.apply(this, args);
-      }, delay);
+      timeout = setTimeout(
+        () => {
+          isScheduled = false;
+
+          func.apply(this, args);
+        },
+
+        delay);
     }
   }).function;
+
+  debouncedFunc.commit = commit;
+
+  return debouncedFunc;
 };
 
 export const getFitContentValue = () => {
