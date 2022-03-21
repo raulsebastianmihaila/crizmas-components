@@ -25,7 +25,6 @@ export default ({
       'setDomContainer',
       'setItems',
       'setItemsCount',
-      'onWheel',
       'onScroll',
       'scrollIntoView',
       'scrollToFit',

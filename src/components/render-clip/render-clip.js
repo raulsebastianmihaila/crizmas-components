@@ -21,10 +21,6 @@ export default class RenderClip extends React.Component {
       }
     };
 
-    this.onWheel = () => {
-      this.props.controller.onWheel();
-    };
-
     this.syncHeightAfterRender = () => {
       const {renderedItemsCount, orthogonalScrollSizeProp, onRender} = this.props.controller;
 
@@ -128,8 +124,7 @@ export default class RenderClip extends React.Component {
           overflow: 'auto',
           whiteSpace: 'nowrap'
         },
-        onScroll: this.onScroll,
-        onWheel: this.onWheel
+        onScroll: this.onScroll
       },
       !!renderedItemsCount && createElement(
         'div',
